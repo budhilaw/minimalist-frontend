@@ -1,0 +1,485 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  Plus, 
+  Briefcase, 
+  Search, 
+  Filter, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  ExternalLink, 
+  Github, 
+  Star, 
+  Calendar,
+  Tag,
+  Globe,
+  Smartphone,
+  Database,
+  Zap,
+  CheckCircle,
+  Clock,
+  AlertCircle
+} from 'lucide-react';
+import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
+
+export const AdminPortfolio: React.FC = () => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    category: 'all',
+    status: 'all',
+    featured: 'all'
+  });
+
+  // Filter projects
+  const filteredProjects = portfolioProjects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+                         project.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+                         project.technologies.some(tech => tech.toLowerCase().includes(filters.search.toLowerCase()));
+    
+    const matchesCategory = filters.category === 'all' || project.category === filters.category;
+    const matchesStatus = filters.status === 'all' || project.status === filters.status;
+    const matchesFeatured = filters.featured === 'all' || 
+                           (filters.featured === 'featured' && project.featured) ||
+                           (filters.featured === 'not-featured' && !project.featured);
+
+    return matchesSearch && matchesCategory && matchesStatus && matchesFeatured;
+  });
+
+  // Handle selection
+  const handleSelectProject = (projectId: string) => {
+    setSelectedProjects(prev => 
+      prev.includes(projectId) 
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedProjects(
+      selectedProjects.length === filteredProjects.length 
+        ? [] 
+        : filteredProjects.map(project => project.id)
+    );
+  };
+
+  // Bulk actions
+  const handleBulkAction = (action: 'feature' | 'unfeature' | 'delete' | 'duplicate') => {
+    console.log(`Performing ${action} on projects:`, selectedProjects);
+    // In a real app, this would make API calls
+    setSelectedProjects([]);
+  };
+
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'web':
+        return <Globe size={16} className="text-blue-500" />;
+      case 'mobile':
+        return <Smartphone size={16} className="text-green-500" />;
+      case 'backend':
+        return <Database size={16} className="text-purple-500" />;
+      case 'ai':
+        return <Zap size={16} className="text-orange-500" />;
+      default:
+        return <Briefcase size={16} className="text-gray-500" />;
+    }
+  };
+
+  // Get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle size={16} className="text-green-500" />;
+      case 'in-progress':
+        return <Clock size={16} className="text-blue-500" />;
+      case 'planned':
+        return <AlertCircle size={16} className="text-orange-500" />;
+      default:
+        return <AlertCircle size={16} className="text-gray-500" />;
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+            Portfolio Projects
+          </h1>
+          <p className="text-[rgb(var(--color-muted-foreground))] mt-1">
+            Manage your portfolio projects and showcase your work
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-4 py-2 border rounded-md transition-colors ${
+              showFilters 
+                ? 'bg-[rgb(var(--color-primary))] text-white border-[rgb(var(--color-primary))]'
+                : 'border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))]'
+            }`}
+          >
+            <Filter size={16} className="mr-2" />
+            Filters
+          </button>
+          <Link
+            to="/admin/portfolio/new"
+            className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
+          >
+            <Plus size={16} className="mr-2" />
+            New Project
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Projects</p>
+              <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">{portfolioProjects.length}</p>
+            </div>
+            <Briefcase className="text-[rgb(var(--color-primary))]" size={24} />
+          </div>
+        </div>
+        <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Featured</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {portfolioProjects.filter(p => p.featured).length}
+              </p>
+            </div>
+            <Star className="text-yellow-600" size={24} />
+          </div>
+        </div>
+        <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Completed</p>
+              <p className="text-2xl font-bold text-green-600">
+                {portfolioProjects.filter(p => p.status === 'completed').length}
+              </p>
+            </div>
+            <CheckCircle className="text-green-600" size={24} />
+          </div>
+        </div>
+        <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[rgb(var(--color-muted-foreground))]">In Progress</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {portfolioProjects.filter(p => p.status === 'in-progress').length}
+              </p>
+            </div>
+            <Clock className="text-blue-600" size={24} />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
+                Search
+              </label>
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))]" />
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
+                Category
+              </label>
+              <select
+                value={filters.category}
+                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+              >
+                <option value="all">All Categories</option>
+                <option value="web">Web Apps</option>
+                <option value="mobile">Mobile</option>
+                <option value="backend">Backend</option>
+                <option value="ai">AI/ML</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="in-progress">In Progress</option>
+                <option value="planned">Planned</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
+                Featured
+              </label>
+              <select
+                value={filters.featured}
+                onChange={(e) => setFilters(prev => ({ ...prev, featured: e.target.value }))}
+                className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+              >
+                <option value="all">All Projects</option>
+                <option value="featured">Featured Only</option>
+                <option value="not-featured">Not Featured</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions */}
+      {selectedProjects.length > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-blue-800 dark:text-blue-200">
+              {selectedProjects.length} project{selectedProjects.length === 1 ? '' : 's'} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleBulkAction('feature')}
+                className="px-3 py-1 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors"
+              >
+                Feature
+              </button>
+              <button
+                onClick={() => handleBulkAction('unfeature')}
+                className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Unfeature
+              </button>
+              <button
+                onClick={() => handleBulkAction('duplicate')}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Duplicate
+              </button>
+              <button
+                onClick={() => handleBulkAction('delete')}
+                className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Projects Table */}
+      <div className="bg-[rgb(var(--color-card))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1200px]">
+            <thead className="bg-[rgb(var(--color-muted))] border-b border-[rgb(var(--color-border))]">
+              <tr>
+                <th className="w-16 px-6 py-4 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-[rgb(var(--color-border))]"
+                  />
+                </th>
+                <th className="w-80 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Project
+                </th>
+                <th className="w-32 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Category
+                </th>
+                <th className="w-36 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Status
+                </th>
+                <th className="w-64 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Technologies
+                </th>
+                <th className="w-40 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Last Updated
+                </th>
+                <th className="w-72 px-6 py-4 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[rgb(var(--color-border))]">
+              {filteredProjects.map((project) => (
+                <tr key={project.id} className="hover:bg-[rgb(var(--color-muted))] transition-colors">
+                  <td className="px-6 py-5">
+                    <input
+                      type="checkbox"
+                      checked={selectedProjects.includes(project.id)}
+                      onChange={() => handleSelectProject(project.id)}
+                      className="rounded border-[rgb(var(--color-border))]"
+                    />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] rounded-lg flex items-center justify-center text-2xl">
+                        {project.image}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <p className="text-base font-semibold text-[rgb(var(--color-foreground))] truncate">
+                            {project.title}
+                          </p>
+                          {project.featured && (
+                            <Star size={16} className="text-yellow-500 fill-current flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-sm text-[rgb(var(--color-muted-foreground))] line-clamp-2 mb-2">
+                          {project.description}
+                        </p>
+                        {project.client && (
+                          <p className="text-xs text-[rgb(var(--color-muted-foreground))]">
+                            <span className="font-medium">Client:</span> {project.client}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center space-x-3">
+                      {getCategoryIcon(project.category)}
+                      <span className="text-sm font-medium text-[rgb(var(--color-foreground))] capitalize">
+                        {project.category}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center space-x-3">
+                      {getStatusIcon(project.status)}
+                      <span className="text-sm font-medium text-[rgb(var(--color-foreground))] capitalize">
+                        {project.status.replace('-', ' ')}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex flex-wrap gap-2">
+                      {project.technologies.slice(0, 4).map((tech, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] text-xs font-medium rounded-md"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                      {project.technologies.length > 4 && (
+                        <span className="px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-muted-foreground))] text-xs font-medium rounded-md">
+                          +{project.technologies.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center space-x-2 text-sm text-[rgb(var(--color-muted-foreground))]">
+                      <Calendar size={16} />
+                      <span className="font-medium">{formatDate(project.updatedAt)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center space-x-3">
+                      {project.liveUrl && (
+                        <a
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
+                          title="View Live"
+                        >
+                          <ExternalLink size={14} className="mr-2" />
+                          Live
+                        </a>
+                      )}
+                      {project.githubUrl && (
+                        <a
+                          href={project.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
+                          title="View Code"
+                        >
+                          <Github size={14} className="mr-2" />
+                          Code
+                        </a>
+                      )}
+                      <Link
+                        to={`/admin/portfolio/${project.id}/edit`}
+                        className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
+                        title="Edit Project"
+                      >
+                        <Edit size={14} className="mr-2" />
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => console.log('Delete project:', project.id)}
+                        className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-red-600 border border-[rgb(var(--color-border))] hover:border-red-300 rounded-md transition-all"
+                        title="Delete Project"
+                      >
+                        <Trash2 size={14} className="mr-2" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {filteredProjects.length === 0 && (
+        <div className="bg-[rgb(var(--color-card))] p-12 rounded-lg border border-[rgb(var(--color-border))] text-center">
+          <Briefcase size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+          <h3 className="text-lg font-medium text-[rgb(var(--color-foreground))] mb-2">
+            No projects found
+          </h3>
+          <p className="text-[rgb(var(--color-muted-foreground))] mb-6">
+            {filters.search || filters.category !== 'all' || filters.status !== 'all' || filters.featured !== 'all'
+              ? 'Try adjusting your filters to see more projects.'
+              : 'Get started by creating your first portfolio project.'
+            }
+          </p>
+          {(!filters.search && filters.category === 'all' && filters.status === 'all' && filters.featured === 'all') && (
+            <Link
+              to="/admin/portfolio/new"
+              className="inline-flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
+            >
+              <Plus size={16} className="mr-2" />
+              Create First Project
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}; 
