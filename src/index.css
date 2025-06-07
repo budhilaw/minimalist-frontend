@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* Custom CSS Variables for Professional Theme */
+:root {
+  /* Light theme */
+  --color-primary: 30 64 175; /* blue-800 */
+  --color-primary-foreground: 255 255 255;
+  --color-secondary: 71 85 105; /* slate-600 */
+  --color-background: 255 255 255;
+  --color-foreground: 15 23 42; /* slate-900 */
+  --color-muted: 248 250 252; /* slate-50 */
+  --color-muted-foreground: 100 116 139; /* slate-500 */
+  --color-border: 226 232 240; /* slate-200 */
+  --color-accent: 59 130 246; /* blue-500 */
+}
+
+.dark {
+  /* Dark theme */
+  --color-primary: 59 130 246; /* blue-500 */
+  --color-primary-foreground: 15 23 42; /* slate-900 */
+  --color-secondary: 148 163 184; /* slate-400 */
+  --color-background: 2 6 23; /* slate-950 */
+  --color-foreground: 248 250 252; /* slate-50 */
+  --color-muted: 15 23 42; /* slate-900 */
+  --color-muted-foreground: 148 163 184; /* slate-400 */
+  --color-border: 30 41 59; /* slate-800 */
+  --color-accent: 59 130 246; /* blue-500 */
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Ensure full width on mobile */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--color-muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-muted-foreground));
+  border-radius: 4px;
+  }
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-secondary));
+}
