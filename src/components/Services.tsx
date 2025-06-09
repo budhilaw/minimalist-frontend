@@ -1,81 +1,58 @@
 import React from 'react';
 import { Code, Users, Settings, Search, Rocket, Shield } from 'lucide-react';
+import { useActiveServices } from '../hooks/useServices';
+import { LoadingSection, ErrorMessage } from './LoadingSpinner';
 
 export const Services: React.FC = () => {
-  const services = [
-    {
-      icon: Code,
-      title: 'Full-Stack Development',
-      description: 'End-to-end web applications built with modern frontend frameworks like ReactJS, VueJS, NextJS and robust backend technologies including Go, Node.js, Python, and PHP.',
-      features: [
-        'Frontend development with ReactJS, VueJS, NextJS',
-        'Backend APIs with Go, Node.js, Python, PHP',
-        'Database design and optimization',
-        'Real-time applications and WebSocket implementation',
-        'Progressive Web Apps (PWA) development'
-      ]
-    },
-    {
-      icon: Rocket,
-      title: 'Frontend Development',
-      description: 'Modern, responsive user interfaces built with cutting-edge frontend technologies. Specializing in ReactJS, VueJS, and NextJS for optimal user experience.',
-      features: [
-        'ReactJS application development',
-        'VueJS single-page applications',
-        'NextJS server-side rendering',
-        'Responsive and mobile-first design',
-        'State management and performance optimization'
-      ]
-    },
-    {
-      icon: Settings,
-      title: 'Backend Development',
-      description: 'Robust backend services and APIs built with modern technologies like Go, Node.js, and Python. Scalable solutions designed for performance and reliability.',
-      features: [
-        'RESTful API development',
-        'Microservices architecture',
-        'Database design and optimization',
-        'Third-party integrations',
-        'Real-time data processing'
-      ]
-    },
-    {
-      icon: Users,
-      title: 'Technical Consulting',
-      description: 'Expert guidance on full-stack development projects, technology choices, and system improvements. Helping teams build better software solutions from frontend to backend.',
-      features: [
-        'Frontend framework selection (React/Vue/Next)',
-        'Backend technology stack consultation',
-        'Performance troubleshooting',
-        'Development best practices',
-        'Team mentoring and training'
-      ]
-    },
-    {
-      icon: Search,
-      title: 'System Architecture',
-      description: 'Design and implement efficient full-stack system architectures that scale with your business needs. Focus on performance, maintainability, and cost-effectiveness.',
-      features: [
-        'Frontend architecture design',
-        'Backend system architecture',
-        'Database architecture planning',
-        'Cloud infrastructure design',
-        'Technology stack optimization'
-      ]
-    },
-    {
-      icon: Shield,
-      title: 'DevOps & Deployment',
-      description: 'Streamline development workflows with modern DevOps practices. Containerization, CI/CD pipelines, and automated deployment solutions for full-stack applications.',
-      features: [
-        'Docker containerization',
-        'CI/CD pipeline setup',
-        'Cloud deployment automation (AWS/GCP)',
-        'Monitoring and logging implementation',
-        'Infrastructure optimization'
-      ]
+  const { services, loading, error } = useActiveServices();
+
+  // Hide section if no services and not loading
+  if (!loading && services.length === 0 && !error) {
+    return null;
+  }
+
+  // Icon mapping for services
+  const iconMap: Record<string, any> = {
+    'code': Code,
+    'users': Users,
+    'settings': Settings,
+    'search': Search,
+    'rocket': Rocket,
+    'shield': Shield
+  };
+
+  // Helper function to get icon component
+  const getServiceIcon = (category: string) => {
+    const categoryIconMap: Record<string, any> = {
+      'development': Code,
+      'consulting': Users,
+      'design': Settings,
+      'devops': Shield,
+      'default': Rocket
+    };
+    return categoryIconMap[category] || categoryIconMap.default;
+  };
+
+  // Helper function to format price
+  const formatPrice = (service: any) => {
+    if (!service.price_amount || !service.price_currency) {
+      return 'Contact for pricing';
     }
-  ];
+    
+    const amount = Number(service.price_amount);
+    const currency = service.price_currency.toUpperCase();
+    const type = service.price_type || 'custom';
+    
+    if (type === 'hourly') {
+      return `$${amount}/${type === 'hourly' ? 'hour' : 'project'}`;
+    } else if (type === 'project') {
+      return `$${amount}/project`;
+    } else if (type === 'fixed') {
+      return `$${amount}`;
+    }
+    
+    return 'Contact for pricing';
+  };
 
   return (
     <section id="services" className="py-20">
@@ -91,40 +68,63 @@ export const Services: React.FC = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => {
-            const IconComponent = service.icon;
-            return (
-              <div
-                key={index}
-                className="group relative bg-[rgb(var(--color-background))] p-8 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
-              >
-                {/* Icon */}
-                <div className="flex items-center justify-center w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <IconComponent className="w-6 h-6 text-white" />
+        {loading ? (
+          <LoadingSection message="Loading services..." />
+        ) : error ? (
+          <ErrorMessage message={error} />
+        ) : services.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service, index) => {
+              const IconComponent = getServiceIcon(service.category);
+              return (
+                <div
+                  key={service.id}
+                  className="group relative bg-[rgb(var(--color-background))] p-8 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
+                >
+                  {/* Icon */}
+                  <div className="flex items-center justify-center w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <IconComponent className="w-6 h-6 text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-4">
+                    {service.title}
+                  </h3>
+                  <p className="text-[rgb(var(--color-muted-foreground))] mb-6 leading-relaxed">
+                    {service.description}
+                  </p>
+
+                  {/* Features List */}
+                  {service.features && service.features.length > 0 && (
+                    <ul className="space-y-2 mb-6">
+                      {service.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-[rgb(var(--color-muted-foreground))]">
+                          <span className="w-1.5 h-1.5 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Service Info */}
+                  <div className="mt-auto">
+
+                    {/* Category Badge */}
+                    <div className="mb-4">
+                      <span className="px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] text-xs rounded-full capitalize">
+                        {service.category}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Content */}
-                <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-4">
-                  {service.title}
-                </h3>
-                <p className="text-[rgb(var(--color-muted-foreground))] mb-6 leading-relaxed">
-                  {service.description}
-                </p>
-
-                {/* Features List */}
-                <ul className="space-y-2">
-                  {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start text-sm text-[rgb(var(--color-muted-foreground))]">
-                      <span className="w-1.5 h-1.5 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-[rgb(var(--color-muted-foreground))]">No services available at the moment.</p>
+          </div>
+        )}
 
         {/* CTA Section */}
         <div className="mt-16 text-center">

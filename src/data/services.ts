@@ -14,7 +14,7 @@ export interface Service {
     currency: string;
     unit?: string; // e.g., 'per hour', 'per project'
   };
-  deliveryTime: string;
+  
   active: boolean;
   featured: boolean;
   order: number;
@@ -71,7 +71,7 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per hour'
     },
-    deliveryTime: '2-8 weeks',
+
     active: true,
     featured: true,
     order: 1,
@@ -116,7 +116,6 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per hour'
     },
-    deliveryTime: '1-6 weeks',
     active: true,
     featured: true,
     order: 2,
@@ -161,7 +160,6 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per hour'
     },
-    deliveryTime: '2-6 weeks',
     active: true,
     featured: false,
     order: 3,
@@ -206,7 +204,6 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per hour'
     },
-    deliveryTime: '1-4 weeks',
     active: true,
     featured: false,
     order: 4,
@@ -251,7 +248,6 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per project'
     },
-    deliveryTime: '2-4 weeks',
     active: true,
     featured: true,
     order: 5,
@@ -296,7 +292,6 @@ export const services: Service[] = [
       currency: 'USD',
       unit: 'per project'
     },
-    deliveryTime: '2-5 weeks',
     active: true,
     featured: false,
     order: 6,

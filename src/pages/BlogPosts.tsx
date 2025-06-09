@@ -1,30 +1,42 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Search, Tag, ArrowRight } from 'lucide-react';
-import { blogPosts } from '../data/blogPosts';
+import { usePublishedPosts } from '../hooks/useBlog';
+import { LoadingSection, ErrorMessage } from '../components/LoadingSpinner';
 
 export const BlogPosts: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+  
+  // Fetch published posts
+  const { posts, loading, error } = usePublishedPosts({ limit: 100 }); // Get all posts for filtering
 
-  // Get unique categories and tags
+  // Redirect to home if no posts are available
+  useEffect(() => {
+    if (!loading && !error && posts.length === 0) {
+      navigate('/', { replace: true });
+    }
+  }, [loading, error, posts.length, navigate]);
+
+  // Get unique categories and tags from API data
   const categories = useMemo(() => {
-    const cats = blogPosts.map(post => post.category);
+    const cats = posts.map(post => post.category);
     return Array.from(new Set(cats));
-  }, []);
+  }, [posts]);
 
   const tags = useMemo(() => {
-    const allTags = blogPosts.flatMap(post => post.tags);
+    const allTags = posts.flatMap(post => post.tags);
     return Array.from(new Set(allTags));
-  }, []);
+  }, [posts]);
 
   // Filter posts based on search and filters
   const filteredPosts = useMemo(() => {
-    return blogPosts.filter(post => {
+    return posts.filter(post => {
       const matchesSearch = searchTerm === '' || 
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesCategory = selectedCategory === '' || post.category === selectedCategory;
@@ -32,7 +44,7 @@ export const BlogPosts: React.FC = () => {
       
       return matchesSearch && matchesCategory && matchesTag;
     });
-  }, [searchTerm, selectedCategory, selectedTag]);
+  }, [posts, searchTerm, selectedCategory, selectedTag]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -47,6 +59,28 @@ export const BlogPosts: React.FC = () => {
     setSelectedCategory('');
     setSelectedTag('');
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <LoadingSection message="Loading blog posts..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <ErrorMessage message={error} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
@@ -125,7 +159,7 @@ export const BlogPosts: React.FC = () => {
 
             {/* Results Count */}
             <div className="text-sm text-[rgb(var(--color-muted-foreground))]">
-              Showing {filteredPosts.length} of {blogPosts.length} posts
+              Showing {filteredPosts.length} of {posts.length} posts
             </div>
           </div>
         </div>
@@ -171,11 +205,11 @@ export const BlogPosts: React.FC = () => {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
                       <Calendar size={14} className="mr-1" />
-                      {formatDate(post.publishDate)}
+                      {formatDate(post.published_at || post.created_at)}
                     </div>
                     <div className="flex items-center">
                       <Clock size={14} className="mr-1" />
-                      {post.readTime}
+                      {Math.ceil(post.content.split(' ').length / 200)} min read
                     </div>
                   </div>
                 </div>

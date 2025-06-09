@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useContentAvailability } from '../hooks/useContentAvailability';
 
 export const Header: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { hasPortfolio, hasServices, hasPosts, loading } = useContentAvailability();
 
   const handleHomeClick = () => {
     // Always scroll to top when Home is clicked
@@ -18,14 +20,18 @@ export const Header: React.FC = () => {
     setIsMenuOpen(false);
   };
 
-  const navigation = [
-    { name: 'Home', href: '/', isExternal: false },
-    { name: 'About', href: '/#about', isExternal: false },
-    { name: 'Portfolio', href: '/#portfolio', isExternal: false },
-    { name: 'Services', href: '/#services', isExternal: false },
-    { name: 'Blog', href: '/blog', isExternal: false },
-    { name: 'Contact', href: '/#contact', isExternal: false },
+  // Build navigation array based on available content
+  const allNavigationItems = [
+    { name: 'Home', href: '/', isExternal: false, condition: true },
+    { name: 'About', href: '/#about', isExternal: false, condition: true },
+    { name: 'Portfolio', href: '/#portfolio', isExternal: false, condition: hasPortfolio },
+    { name: 'Services', href: '/#services', isExternal: false, condition: hasServices },
+    { name: 'Blog', href: '/blog', isExternal: false, condition: hasPosts },
+    { name: 'Contact', href: '/#contact', isExternal: false, condition: true },
   ];
+
+  // Filter navigation based on content availability (when not loading)
+  const navigation = loading ? allNavigationItems : allNavigationItems.filter(item => item.condition);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[rgb(var(--color-background))] border-b border-[rgb(var(--color-border))] backdrop-blur-sm bg-opacity-90">

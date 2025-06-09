@@ -1,9 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, Tag } from 'lucide-react';
-import { blogPosts } from '../data/blogPosts';
+import { usePublishedPosts, useFeaturedPosts } from '../hooks/useBlog';
+import { LoadingSection, ErrorMessage } from './LoadingSpinner';
 
 export const Blog: React.FC = () => {
+  // Fetch published posts for the regular posts section
+  const { posts: publishedPosts, loading, error } = usePublishedPosts({ limit: 6 });
+  
+  // Fetch featured posts for the featured section
+  const { 
+    posts: featuredPosts, 
+    loading: featuredLoading, 
+    error: featuredError 
+  } = useFeaturedPosts();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -12,6 +22,22 @@ export const Blog: React.FC = () => {
       day: 'numeric'
     });
   };
+
+  // Helper function to calculate read time
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.split(' ').length;
+    const minutes = Math.ceil(words / wordsPerMinute);
+    return `${minutes} min read`;
+  };
+
+  // Hide section if no posts at all and not loading
+  const hasAnyPosts = publishedPosts.length > 0 || featuredPosts.length > 0;
+  const isLoading = loading || featuredLoading;
+  
+  if (!isLoading && !hasAnyPosts && !error && !featuredError) {
+    return null;
+  }
 
   return (
     <section id="blog" className="py-20 bg-[rgb(var(--color-muted))]">
@@ -27,7 +53,12 @@ export const Blog: React.FC = () => {
         </div>
 
         {/* Featured Post */}
-        {blogPosts.filter(post => post.featured).map((post, index) => (
+        {featuredLoading ? (
+          <LoadingSection message="Loading featured posts..." />
+        ) : featuredError ? (
+          <ErrorMessage message={featuredError} />
+        ) : featuredPosts.length > 0 ? (
+          featuredPosts.slice(0, 1).map((post, index) => (
           <div key={index} className="mb-12">
             <div className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden hover:border-[rgb(var(--color-primary))] transition-colors duration-300">
               <div className="lg:grid lg:grid-cols-2">
@@ -62,11 +93,11 @@ export const Blog: React.FC = () => {
                     <div className="flex items-center space-x-4 text-sm text-[rgb(var(--color-muted-foreground))]">
                       <div className="flex items-center">
                         <Calendar size={16} className="mr-2" />
-                        {formatDate(post.publishDate)}
+                        {formatDate(post.published_at || post.created_at)}
                       </div>
                       <div className="flex items-center">
                         <Clock size={16} className="mr-2" />
-                        {post.readTime}
+                        {calculateReadTime(post.content)}
                       </div>
                     </div>
                     
@@ -93,11 +124,21 @@ export const Blog: React.FC = () => {
               </div>
             </div>
           </div>
-        ))}
+        ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-[rgb(var(--color-muted-foreground))]">No featured posts available.</p>
+          </div>
+        )}
 
         {/* Regular Posts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {blogPosts.filter(post => !post.featured).map((post, index) => (
+        {loading ? (
+          <LoadingSection message="Loading posts..." />
+        ) : error ? (
+          <ErrorMessage message={error} />
+        ) : publishedPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {publishedPosts.filter(post => !post.featured).map((post, index) => (
             <article
               key={index}
               className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] p-6 hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
@@ -124,11 +165,11 @@ export const Blog: React.FC = () => {
                 <div className="flex items-center space-x-4 text-sm text-[rgb(var(--color-muted-foreground))]">
                   <div className="flex items-center">
                     <Calendar size={14} className="mr-1" />
-                    {formatDate(post.publishDate)}
+                    {formatDate(post.published_at || post.created_at)}
                   </div>
                   <div className="flex items-center">
                     <Clock size={14} className="mr-1" />
-                    {post.readTime}
+                    {calculateReadTime(post.content)}
                   </div>
                 </div>
               </div>
@@ -156,6 +197,11 @@ export const Blog: React.FC = () => {
             </article>
           ))}
         </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-[rgb(var(--color-muted-foreground))]">No posts available.</p>
+          </div>
+        )}
 
         {/* View All Posts CTA */}
         <div className="mt-12 text-center">
