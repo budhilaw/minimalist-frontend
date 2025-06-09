@@ -62,12 +62,20 @@ export const Blog: React.FC = () => {
           <div key={index} className="mb-12">
             <div className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden hover:border-[rgb(var(--color-primary))] transition-colors duration-300">
               <div className="lg:grid lg:grid-cols-2">
-                {/* Image Placeholder */}
-                <div className="h-64 lg:h-auto bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <Tag size={48} className="mx-auto mb-4 opacity-80" />
-                    <p className="text-lg font-medium">Featured Article</p>
-                  </div>
+                {/* Featured Image */}
+                <div className="h-64 lg:h-auto bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center overflow-hidden">
+                  {post.featured_image ? (
+                    <img 
+                      src={post.featured_image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center text-white">
+                      <Tag size={48} className="mx-auto mb-4 opacity-80" />
+                      <p className="text-lg font-medium">Featured Article</p>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Content */}
@@ -81,9 +89,11 @@ export const Blog: React.FC = () => {
                     </span>
                   </div>
                   
-                  <h3 className="text-2xl font-bold text-[rgb(var(--color-foreground))] mb-4">
-                    {post.title}
-                  </h3>
+                  <Link to={`/blog/${post.slug}`}>
+                    <h3 className="text-2xl font-bold text-[rgb(var(--color-foreground))] mb-4 hover:text-[rgb(var(--color-primary))] transition-colors duration-200 cursor-pointer">
+                      {post.title}
+                    </h3>
+                  </Link>
                   
                   <p className="text-[rgb(var(--color-muted-foreground))] mb-6 leading-relaxed">
                     {post.excerpt}
@@ -102,7 +112,7 @@ export const Blog: React.FC = () => {
                     </div>
                     
                     <Link
-                       to={`/blog/${post.title}`}
+                       to={`/blog/${post.slug}`}
                        className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                      >
                        Read More
@@ -141,19 +151,33 @@ export const Blog: React.FC = () => {
             {publishedPosts.filter(post => !post.featured).map((post, index) => (
             <article
               key={index}
-              className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] p-6 hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
+              className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
             >
-              {/* Category */}
-              <div className="mb-4">
-                <span className="px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] text-sm rounded-full">
-                  {post.category}
-                </span>
-              </div>
+              {/* Featured Image */}
+              {post.featured_image && (
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={post.featured_image} 
+                    alt={post.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              )}
+              
+              <div className="p-6">
+                {/* Category */}
+                <div className="mb-4">
+                  <span className="px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] text-sm rounded-full">
+                    {post.category}
+                  </span>
+                </div>
               
               {/* Title */}
-              <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-3 line-clamp-2">
-                {post.title}
-              </h3>
+              <Link to={`/blog/${post.slug}`}>
+                <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-3 line-clamp-2 hover:text-[rgb(var(--color-primary))] transition-colors duration-200 cursor-pointer">
+                  {post.title}
+                </h3>
+              </Link>
               
               {/* Excerpt */}
               <p className="text-[rgb(var(--color-muted-foreground))] mb-4 line-clamp-3">
@@ -188,12 +212,13 @@ export const Blog: React.FC = () => {
               
               {/* Read More Link */}
                <Link
-                 to={`/blog/${post.id}`}
+                 to={`/blog/${post.slug}`}
                  className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                >
                  Read More
                  <ArrowRight size={14} className="ml-2" />
                </Link>
+              </div>
             </article>
           ))}
         </div>

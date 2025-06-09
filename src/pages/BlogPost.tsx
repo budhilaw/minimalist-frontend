@@ -1,20 +1,55 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Calendar, Clock, User, ArrowLeft, ArrowRight } from 'lucide-react';
-import { blogPosts } from '../data/blogPosts';
+import { useSinglePost, usePublishedPosts } from '../hooks/useBlog';
 import { CommentSection } from '../components/comments';
+import { LoadingSpinner, ErrorMessage } from '../components/LoadingSpinner';
 
 export const BlogPost: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   
-  const post = blogPosts.find(p => p.id === id);
+  // Fetch single post
+  const { post, loading, error } = useSinglePost(slug);
   
+  // Fetch all published posts for related posts and navigation
+  const { posts: allPosts } = usePublishedPosts({ limit: 100 });
+  
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))] flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <ErrorMessage message={error} />
+          <div className="mt-8 text-center">
+            <Link
+              to="/blog"
+              className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Back to Blog
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle post not found
   if (!post) {
     return <Navigate to="/blog" replace />;
   }
 
   // Get related posts (same category, excluding current post)
-  const relatedPosts = blogPosts
+  const relatedPosts = allPosts
     .filter(p => p.id !== post.id && p.category === post.category)
     .slice(0, 3);
 
@@ -27,9 +62,9 @@ export const BlogPost: React.FC = () => {
   };
 
   // Find previous and next posts
-  const currentIndex = blogPosts.findIndex(p => p.id === id);
-  const previousPost = currentIndex > 0 ? blogPosts[currentIndex - 1] : null;
-  const nextPost = currentIndex < blogPosts.length - 1 ? blogPosts[currentIndex + 1] : null;
+  const currentIndex = allPosts.findIndex(p => p.slug === slug);
+  const previousPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
   return (
     <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
@@ -47,6 +82,17 @@ export const BlogPost: React.FC = () => {
 
         {/* Post Header */}
         <header className="mb-12">
+          {/* Featured Image */}
+          {post.featured_image && (
+            <div className="mb-8 rounded-lg overflow-hidden">
+              <img 
+                src={post.featured_image} 
+                alt={post.title}
+                className="w-full h-64 md:h-96 object-cover"
+              />
+            </div>
+          )}
+
           {/* Featured Badge */}
           {post.featured && (
             <div className="mb-4">
@@ -72,17 +118,15 @@ export const BlogPost: React.FC = () => {
           <div className="flex flex-wrap items-center gap-6 text-[rgb(var(--color-muted-foreground))] mb-6">
             <div className="flex items-center">
               <User size={16} className="mr-2" />
-              <span>{post.author.name}</span>
-              <span className="mx-2">•</span>
-              <span>{post.author.role}</span>
+              <span>Admin</span>
             </div>
             <div className="flex items-center">
               <Calendar size={16} className="mr-2" />
-              <span>{formatDate(post.publishDate)}</span>
+              <span>{formatDate(post.published_at || post.created_at)}</span>
             </div>
             <div className="flex items-center">
               <Clock size={16} className="mr-2" />
-              <span>{post.readTime}</span>
+              <span>{Math.ceil(post.content.split(' ').length / 200)} min read</span>
             </div>
           </div>
 
@@ -196,7 +240,7 @@ export const BlogPost: React.FC = () => {
         </div>
 
         {/* Comments Section */}
-        <CommentSection postId={id} />
+        <CommentSection postId={post.id} />
 
         {/* Post Navigation */}
         <div className="mt-16 pt-8 border-t border-[rgb(var(--color-border))]">
@@ -204,7 +248,7 @@ export const BlogPost: React.FC = () => {
             {/* Previous Post */}
             {previousPost && (
               <Link
-                to={`/blog/${previousPost.id}`}
+                to={`/blog/${previousPost.slug}`}
                 className="group p-6 bg-[rgb(var(--color-muted))] rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300"
               >
                 <div className="flex items-center text-[rgb(var(--color-muted-foreground))] mb-2">
@@ -220,7 +264,7 @@ export const BlogPost: React.FC = () => {
             {/* Next Post */}
             {nextPost && (
               <Link
-                to={`/blog/${nextPost.id}`}
+                to={`/blog/${nextPost.slug}`}
                 className="group p-6 bg-[rgb(var(--color-muted))] rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 md:text-right"
               >
                 <div className="flex items-center justify-end text-[rgb(var(--color-muted-foreground))] mb-2">
@@ -245,7 +289,7 @@ export const BlogPost: React.FC = () => {
               {relatedPosts.map((relatedPost) => (
                 <Link
                   key={relatedPost.id}
-                  to={`/blog/${relatedPost.id}`}
+                  to={`/blog/${relatedPost.slug}`}
                   className="group bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300"
                 >
                   <div className="mb-3">
@@ -261,7 +305,7 @@ export const BlogPost: React.FC = () => {
                   </p>
                   <div className="flex items-center mt-3 text-xs text-[rgb(var(--color-muted-foreground))]">
                     <Clock size={12} className="mr-1" />
-                    {relatedPost.readTime}
+                    {Math.ceil(relatedPost.content.split(' ').length / 200)} min read
                   </div>
                 </Link>
               ))}

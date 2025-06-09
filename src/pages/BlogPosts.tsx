@@ -170,16 +170,28 @@ export const BlogPosts: React.FC = () => {
             {filteredPosts.map((post) => (
               <article
                 key={post.id}
-                className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] p-6 hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg group"
+                className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg group"
               >
-                {/* Featured Badge */}
-                {post.featured && (
-                  <div className="mb-4">
-                    <span className="px-3 py-1 bg-[rgb(var(--color-primary))] text-white text-sm font-medium rounded-full">
-                      Featured
-                    </span>
+                {/* Featured Image */}
+                {post.featured_image && (
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={post.featured_image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
                 )}
+
+                <div className="p-6">
+                  {/* Featured Badge */}
+                  {post.featured && (
+                    <div className="mb-4">
+                      <span className="px-3 py-1 bg-[rgb(var(--color-primary))] text-white text-sm font-medium rounded-full">
+                        Featured
+                      </span>
+                    </div>
+                  )}
 
                 {/* Category */}
                 <div className="mb-4">
@@ -190,7 +202,7 @@ export const BlogPosts: React.FC = () => {
 
                 {/* Title */}
                 <h2 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-3 group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
-                  <Link to={`/blog/${post.id}`}>
+                  <Link to={`/blog/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
@@ -229,12 +241,13 @@ export const BlogPosts: React.FC = () => {
 
                 {/* Read More Link */}
                 <Link
-                  to={`/blog/${post.id}`}
+                  to={`/blog/${post.slug}`}
                   className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                 >
                   Read More
                   <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
+                </div>
               </article>
             ))}
           </div>

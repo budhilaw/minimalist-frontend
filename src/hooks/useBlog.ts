@@ -8,6 +8,12 @@ interface UseBlogState {
   total: number;
 }
 
+interface UseSinglePostState {
+  post: BlogPost | null;
+  loading: boolean;
+  error: string | null;
+}
+
 export const useBlog = (params?: {
   page?: number;
   limit?: number;
@@ -154,6 +160,56 @@ export const useFeaturedPosts = () => {
 
     fetchFeaturedPosts();
   }, []);
+
+  return state;
+};
+
+export const useSinglePost = (slug: string | undefined) => {
+  const [state, setState] = useState<UseSinglePostState>({
+    post: null,
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!slug) {
+      setState({ post: null, loading: false, error: 'No post slug provided' });
+      return;
+    }
+
+    const fetchPost = async () => {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      try {
+        const response = await BlogService.getPostBySlug(slug);
+        
+        if (response.error) {
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            error: response.error || 'Failed to fetch post'
+          }));
+          return;
+        }
+
+        if (response.data) {
+          setState({
+            post: response.data,
+            loading: false,
+            error: null,
+          });
+        }
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to fetch post',
+        }));
+      }
+    };
+
+    fetchPost();
+  }, [slug]);
 
   return state;
 }; 

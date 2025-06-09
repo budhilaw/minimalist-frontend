@@ -43,7 +43,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/blog" element={<BlogPosts />} />
-                  <Route path="/blog/:id" element={<BlogPost />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
                 </Routes>
               </main>
               <Footer />
