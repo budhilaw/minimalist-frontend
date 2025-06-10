@@ -99,6 +99,18 @@ export const RateLimiter = {
     localStorage.removeItem(`login_attempts_exp_${identifier}`);
   },
 
+  // Clear all rate limiting data (for development/demo purposes)
+  clearAllAttempts: (): void => {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('login_attempts_') || key.startsWith('login_attempts_exp_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  },
+
   isBlocked: (identifier: string, maxAttempts: number = 5): boolean => {
     const attempts = RateLimiter.getAttempts(identifier);
     const expiration = localStorage.getItem(`login_attempts_exp_${identifier}`);
@@ -231,9 +243,6 @@ export const AuditLogger = {
       sessionId: sessionStorage.getItem('admin_session_id'),
       userAgent: navigator.userAgent
     };
-    
-    // In production, send to backend
-    console.log('Admin Audit Log:', logEntry);
     
     // Store locally for demo
     const logs = JSON.parse(localStorage.getItem('admin_audit_logs') || '[]');

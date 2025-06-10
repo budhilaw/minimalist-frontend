@@ -1,26 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Briefcase, 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  ExternalLink, 
-  Github, 
-  Star, 
-  Calendar,
-  Tag,
-  Globe,
-  Smartphone,
-  Database,
-  Zap,
-  CheckCircle,
-  Clock,
-  AlertCircle
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
 
 export const AdminPortfolio: React.FC = () => {
@@ -66,9 +46,8 @@ export const AdminPortfolio: React.FC = () => {
   };
 
   // Bulk actions
-  const handleBulkAction = (action: 'feature' | 'unfeature' | 'delete' | 'duplicate') => {
-    console.log(`Performing ${action} on projects:`, selectedProjects);
-    // In a real app, this would make API calls
+  const handleBulkAction = (action: string) => {
+    // Handle bulk actions - implement API calls
     setSelectedProjects([]);
   };
 
@@ -76,15 +55,15 @@ export const AdminPortfolio: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'web':
-        return <Globe size={16} className="text-blue-500" />;
+        return <Icon icon="lucide:globe" width={16} height={16} className="text-blue-500" />;
       case 'mobile':
-        return <Smartphone size={16} className="text-green-500" />;
+        return <Icon icon="lucide:smartphone" width={16} height={16} className="text-green-500" />;
       case 'backend':
-        return <Database size={16} className="text-purple-500" />;
+        return <Icon icon="lucide:database" width={16} height={16} className="text-purple-500" />;
       case 'ai':
-        return <Zap size={16} className="text-orange-500" />;
+        return <Icon icon="lucide:zap" width={16} height={16} className="text-orange-500" />;
       default:
-        return <Briefcase size={16} className="text-gray-500" />;
+        return <Icon icon="lucide:briefcase" width={16} height={16} className="text-gray-500" />;
     }
   };
 
@@ -92,13 +71,13 @@ export const AdminPortfolio: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle size={16} className="text-green-500" />;
+        return <Icon icon="lucide:check-circle" width={16} height={16} className="text-green-500" />;
       case 'in-progress':
-        return <Clock size={16} className="text-blue-500" />;
+        return <Icon icon="lucide:clock" width={16} height={16} className="text-blue-500" />;
       case 'planned':
-        return <AlertCircle size={16} className="text-orange-500" />;
+        return <Icon icon="lucide:alert-circle" width={16} height={16} className="text-orange-500" />;
       default:
-        return <AlertCircle size={16} className="text-gray-500" />;
+        return <Icon icon="lucide:alert-circle" width={16} height={16} className="text-gray-500" />;
     }
   };
 
@@ -132,14 +111,14 @@ export const AdminPortfolio: React.FC = () => {
                 : 'border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))]'
             }`}
           >
-            <Filter size={16} className="mr-2" />
+            <Icon icon="lucide:filter" width={16} height={16} className="mr-2" />
             Filters
           </button>
           <Link
             to="/admin/portfolio/new"
             className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
           >
-            <Plus size={16} className="mr-2" />
+            <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
             New Project
           </Link>
         </div>
@@ -153,7 +132,7 @@ export const AdminPortfolio: React.FC = () => {
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Projects</p>
               <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">{portfolioProjects.length}</p>
             </div>
-            <Briefcase className="text-[rgb(var(--color-primary))]" size={24} />
+            <Icon icon="lucide:briefcase" className="text-[rgb(var(--color-primary))]" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -164,7 +143,7 @@ export const AdminPortfolio: React.FC = () => {
                 {portfolioProjects.filter(p => p.featured).length}
               </p>
             </div>
-            <Star className="text-yellow-600" size={24} />
+            <Icon icon="lucide:star" className="text-yellow-600" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -175,7 +154,7 @@ export const AdminPortfolio: React.FC = () => {
                 {portfolioProjects.filter(p => p.status === 'completed').length}
               </p>
             </div>
-            <CheckCircle className="text-green-600" size={24} />
+            <Icon icon="lucide:check-circle" className="text-green-600" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -186,7 +165,7 @@ export const AdminPortfolio: React.FC = () => {
                 {portfolioProjects.filter(p => p.status === 'in-progress').length}
               </p>
             </div>
-            <Clock className="text-blue-600" size={24} />
+            <Icon icon="lucide:clock" className="text-blue-600" width={24} height={24} />
           </div>
         </div>
       </div>
@@ -200,7 +179,7 @@ export const AdminPortfolio: React.FC = () => {
                 Search
               </label>
               <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))]" />
+                <Icon icon="lucide:search" width={16} height={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))]" />
                 <input
                   type="text"
                   placeholder="Search projects..."
@@ -352,7 +331,7 @@ export const AdminPortfolio: React.FC = () => {
                             {project.title}
                           </p>
                           {project.featured && (
-                            <Star size={16} className="text-yellow-500 fill-current flex-shrink-0" />
+                            <Icon icon="lucide:star" width={16} height={16} className="text-yellow-500 fill-current flex-shrink-0" />
                           )}
                         </div>
                         <p className="text-sm text-[rgb(var(--color-muted-foreground))] line-clamp-2 mb-2">
@@ -401,7 +380,7 @@ export const AdminPortfolio: React.FC = () => {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center space-x-2 text-sm text-[rgb(var(--color-muted-foreground))]">
-                      <Calendar size={16} />
+                      <Icon icon="lucide:calendar" width={16} height={16} />
                       <span className="font-medium">{formatDate(project.updatedAt)}</span>
                     </div>
                   </td>
@@ -415,7 +394,7 @@ export const AdminPortfolio: React.FC = () => {
                           className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
                           title="View Live"
                         >
-                          <ExternalLink size={14} className="mr-2" />
+                          <Icon icon="lucide:external-link" width={14} height={14} className="mr-2" />
                           Live
                         </a>
                       )}
@@ -427,7 +406,7 @@ export const AdminPortfolio: React.FC = () => {
                           className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
                           title="View Code"
                         >
-                          <Github size={14} className="mr-2" />
+                          <Icon icon="simple-icons:github" width={14} height={14} className="mr-2" />
                           Code
                         </a>
                       )}
@@ -436,15 +415,15 @@ export const AdminPortfolio: React.FC = () => {
                         className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
                         title="Edit Project"
                       >
-                        <Edit size={14} className="mr-2" />
+                        <Icon icon="lucide:edit" width={14} height={14} className="mr-2" />
                         Edit
                       </Link>
                       <button
-                        onClick={() => console.log('Delete project:', project.id)}
+                        onClick={() => {/* Delete project logic */}}
                         className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-red-600 border border-[rgb(var(--color-border))] hover:border-red-300 rounded-md transition-all"
                         title="Delete Project"
                       >
-                        <Trash2 size={14} className="mr-2" />
+                        <Icon icon="lucide:trash2" width={14} height={14} className="mr-2" />
                         Delete
                       </button>
                     </div>
@@ -459,7 +438,7 @@ export const AdminPortfolio: React.FC = () => {
       {/* Empty State */}
       {filteredProjects.length === 0 && (
         <div className="bg-[rgb(var(--color-card))] p-12 rounded-lg border border-[rgb(var(--color-border))] text-center">
-          <Briefcase size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+          <Icon icon="lucide:briefcase" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
           <h3 className="text-lg font-medium text-[rgb(var(--color-foreground))] mb-2">
             No projects found
           </h3>
@@ -474,7 +453,7 @@ export const AdminPortfolio: React.FC = () => {
               to="/admin/portfolio/new"
               className="inline-flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
             >
-              <Plus size={16} className="mr-2" />
+              <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
               Create First Project
             </Link>
           )}

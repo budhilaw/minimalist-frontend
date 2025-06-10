@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { CommentFormData } from '../../types/comment';
 
 interface CommentFormProps {
@@ -96,7 +96,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           type="submit"
           className={`inline-flex items-center px-${isReply ? '4' : '6'} py-${isReply ? '2' : '3'} bg-[rgb(var(--color-primary))] text-white ${isReply ? 'text-sm' : ''} rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200`}
         >
-          <Send size={isReply ? 14 : 16} className="mr-2" />
+          <Icon icon="lucide:send" size={isReply ? 14 : 16} className="mr-2" />
           {buttonText}
         </button>
         {onCancel && (

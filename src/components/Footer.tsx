@@ -1,34 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Linkedin, Mail, Twitter, Heart } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useContentAvailability } from '../hooks/useContentAvailability';
+import { SocialLinks, defaultSocialLinks } from './SocialLinks';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { hasPortfolio, hasServices, hasPosts, loading } = useContentAvailability();
   
-  const socialLinks = [
-    {
-      name: 'GitHub',
-      href: 'https://github.com',
-      icon: Github
-    },
-    {
-      name: 'LinkedIn',
-      href: 'https://linkedin.com',
-      icon: Linkedin
-    },
-    {
-      name: 'Twitter',
-      href: 'https://twitter.com',
-      icon: Twitter
-    },
-    {
-      name: 'Email',
-      href: 'mailto:john@example.com',
-      icon: Mail
-    }
-  ];
+
 
   // Build quick links array based on available content
   const allQuickLinks = [
@@ -65,23 +45,7 @@ export const Footer: React.FC = () => {
               Turning complex problems into elegant solutions. Building scalable web applications 
               and helping teams deliver exceptional software.
             </p>
-            <div className="flex space-x-4">
-              {socialLinks.map((link) => {
-                const IconComponent = link.icon;
-                return (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
-                    aria-label={link.name}
-                  >
-                    <IconComponent size={20} />
-                  </a>
-                );
-              })}
-            </div>
+            <SocialLinks links={defaultSocialLinks} size={20} />
           </div>
 
           {/* Quick Links - Only show if there's content available */}
@@ -146,7 +110,7 @@ export const Footer: React.FC = () => {
           <div className="flex justify-center items-center">
             <div className="flex items-center text-[rgb(var(--color-muted-foreground))] text-sm">
               <span>© {currentYear} John Doe. Made with</span>
-              <Heart size={16} className="mx-1 text-red-500" />
+              <Icon icon="lucide:heart" width={16} height={16} className="mx-1 text-red-500" />
               <span>and React + TypeScript</span>
             </div>
           </div>

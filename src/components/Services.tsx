@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code, Users, Settings, Search, Rocket, Shield } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useActiveServices } from '../hooks/useServices';
 import { LoadingSection, ErrorMessage } from './LoadingSpinner';
 
@@ -12,23 +12,23 @@ export const Services: React.FC = () => {
   }
 
   // Icon mapping for services
-  const iconMap: Record<string, any> = {
-    'code': Code,
-    'users': Users,
-    'settings': Settings,
-    'search': Search,
-    'rocket': Rocket,
-    'shield': Shield
+  const iconMap: Record<string, string> = {
+    'code': 'lucide:code',
+    'users': 'lucide:users',
+    'settings': 'lucide:settings',
+    'search': 'lucide:search',
+    'rocket': 'lucide:rocket',
+    'shield': 'lucide:shield'
   };
 
   // Helper function to get icon component
   const getServiceIcon = (category: string) => {
-    const categoryIconMap: Record<string, any> = {
-      'development': Code,
-      'consulting': Users,
-      'design': Settings,
-      'devops': Shield,
-      'default': Rocket
+    const categoryIconMap: Record<string, string> = {
+      'development': 'lucide:code',
+      'consulting': 'lucide:users',
+      'design': 'lucide:settings',
+      'devops': 'lucide:shield',
+      'default': 'lucide:rocket'
     };
     return categoryIconMap[category] || categoryIconMap.default;
   };
@@ -74,16 +74,14 @@ export const Services: React.FC = () => {
           <ErrorMessage message={error} />
         ) : services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => {
-              const IconComponent = getServiceIcon(service.category);
-              return (
+            {services.map((service, index) => (
                 <div
                   key={service.id}
                   className="group relative bg-[rgb(var(--color-background))] p-8 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg"
                 >
                   {/* Icon */}
                   <div className="flex items-center justify-center w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <IconComponent className="w-6 h-6 text-white" />
+                    <Icon icon={getServiceIcon(service.category)} className="w-6 h-6 text-white" />
                   </div>
 
                   {/* Content */}
@@ -117,8 +115,7 @@ export const Services: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              ))}
           </div>
         ) : (
           <div className="text-center py-8">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Key, Save, Eye, EyeOff } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useAuth } from '../../hooks/useAuth';
 
 interface ProfileFormData {
@@ -76,9 +76,6 @@ export const AdminProfile: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // In real app, this would be an API call
-      console.log('Profile updated:', profileData);
-      
       setProfileSuccess('Profile updated successfully!');
     } catch (error) {
       setProfileError('Failed to update profile. Please try again.');
@@ -110,9 +107,6 @@ export const AdminProfile: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // In real app, this would be an API call
-      console.log('Password changed');
-      
       setPasswordSuccess('Password changed successfully!');
       setPasswordData({
         currentPassword: '',
@@ -140,7 +134,7 @@ export const AdminProfile: React.FC = () => {
         {/* Profile Information */}
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center mb-6">
-            <User className="text-[rgb(var(--color-primary))] mr-3" size={24} />
+            <Icon icon="lucide:user" className="text-[rgb(var(--color-primary))] mr-3" width={24} height={24} />
             <h2 className="text-xl font-semibold text-[rgb(var(--color-foreground))]">
               Profile Information
             </h2>
@@ -233,7 +227,7 @@ export const AdminProfile: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <Save size={16} className="mr-2" />
+                  <Icon icon="lucide:save" width={16} height={16} className="mr-2" />
                   Update Profile
                 </>
               )}
@@ -244,7 +238,7 @@ export const AdminProfile: React.FC = () => {
         {/* Change Password */}
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center mb-6">
-            <Key className="text-[rgb(var(--color-primary))] mr-3" size={24} />
+            <Icon icon="lucide:key" className="text-[rgb(var(--color-primary))] mr-3" width={24} height={24} />
             <h2 className="text-xl font-semibold text-[rgb(var(--color-foreground))]">
               Change Password
             </h2>
@@ -271,7 +265,7 @@ export const AdminProfile: React.FC = () => {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
                 >
-                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showCurrentPassword ? <Icon icon="lucide:eye-off" width={16} height={16} /> : <Icon icon="lucide:eye" width={16} height={16} />}
                 </button>
               </div>
             </div>
@@ -296,7 +290,7 @@ export const AdminProfile: React.FC = () => {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
                 >
-                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showNewPassword ? <Icon icon="lucide:eye-off" width={16} height={16} /> : <Icon icon="lucide:eye" width={16} height={16} />}
                 </button>
               </div>
               <p className="text-xs text-[rgb(var(--color-muted-foreground))] mt-1">
@@ -324,7 +318,7 @@ export const AdminProfile: React.FC = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
                 >
-                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showConfirmPassword ? <Icon icon="lucide:eye-off" width={16} height={16} /> : <Icon icon="lucide:eye" width={16} height={16} />}
                 </button>
               </div>
             </div>
@@ -352,7 +346,7 @@ export const AdminProfile: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <Key size={16} className="mr-2" />
+                  <Icon icon="lucide:key" width={16} height={16} className="mr-2" />
                   Change Password
                 </>
               )}

@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Save, 
-  X, 
-  Eye,
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Calendar,
-  ExternalLink,
-  Github,
-  Star,
-  Globe,
-  Smartphone,
-  Database,
-  Zap
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
 
@@ -49,10 +34,10 @@ export const AdminPortfolioForm: React.FC = () => {
 
   // Available options
   const categories = [
-    { value: 'web', label: 'Web Apps', icon: Globe },
-    { value: 'mobile', label: 'Mobile', icon: Smartphone },
-    { value: 'backend', label: 'Backend', icon: Database },
-    { value: 'ai', label: 'AI/ML', icon: Zap }
+    { value: 'web', label: 'Web Apps', icon: 'lucide:globe' },
+    { value: 'mobile', label: 'Mobile', icon: 'lucide:smartphone' },
+    { value: 'backend', label: 'Backend', icon: 'lucide:database' },
+    { value: 'ai', label: 'AI/ML', icon: 'lucide:zap' }
   ];
 
   const statuses = [
@@ -91,15 +76,16 @@ export const AdminPortfolioForm: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    console.log(isEditing ? 'Updating project:' : 'Creating project:', formData);
-    
-    setIsSubmitting(false);
-    navigate('/admin/portfolio');
+    try {
+      setIsSubmitting(true);
+      // In a real app, this would make an API call
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      // Navigate back to portfolio page
+      navigate('/admin/portfolio');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   // Handle technology addition
@@ -155,7 +141,7 @@ export const AdminPortfolioForm: React.FC = () => {
                 onClick={() => setShowPreview(false)}
                 className="text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
               >
-                <X size={24} />
+                <Icon icon="lucide:x" width={24} height={24} />
               </button>
             </div>
 
@@ -201,13 +187,13 @@ export const AdminPortfolioForm: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   {formData.liveUrl && (
                     <div className="inline-flex items-center px-6 py-3 bg-[rgb(var(--color-primary))] text-white rounded-md">
-                      <ExternalLink size={16} className="mr-2" />
+                      <Icon icon="lucide:external-link" width={16} height={16} className="mr-2" />
                       Live Demo
                     </div>
                   )}
                   {formData.githubUrl && (
                     <div className="inline-flex items-center px-6 py-3 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md">
-                      <Github size={16} className="mr-2" />
+                      <Icon icon="simple-icons:github" width={16} height={16} className="mr-2" />
                       View Code
                     </div>
                   )}
@@ -226,7 +212,7 @@ export const AdminPortfolioForm: React.FC = () => {
               to="/admin/portfolio"
               className="flex items-center text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] transition-colors"
             >
-              <ArrowLeft size={20} className="mr-2" />
+              <Icon icon="lucide:arrow-left" width={20} height={20} className="mr-2" />
               Back to Portfolio
             </Link>
             <div>
@@ -244,7 +230,7 @@ export const AdminPortfolioForm: React.FC = () => {
               onClick={() => setShowPreview(true)}
               className="flex items-center px-4 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors"
             >
-              <Eye size={16} className="mr-2" />
+              <Icon icon="lucide:eye" width={16} height={16} className="mr-2" />
               Preview
             </button>
           </div>
@@ -412,7 +398,7 @@ export const AdminPortfolioForm: React.FC = () => {
                               onClick={addTechnology}
                               className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
                             >
-                              <Plus size={16} />
+                              <Icon icon="lucide:plus" width={16} height={16} />
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -427,7 +413,7 @@ export const AdminPortfolioForm: React.FC = () => {
                                   onClick={() => removeTechnology(tech)}
                                   className="ml-2 text-[rgb(var(--color-muted-foreground))] hover:text-red-500"
                                 >
-                                  <X size={14} />
+                                  <Icon icon="lucide:x" width={14} height={14} />
                                 </button>
                               </span>
                             ))}
@@ -455,7 +441,7 @@ export const AdminPortfolioForm: React.FC = () => {
                               onClick={addHighlight}
                               className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
                             >
-                              <Plus size={16} />
+                              <Icon icon="lucide:plus" width={16} height={16} />
                             </button>
                           </div>
                           <div className="space-y-2">
@@ -472,7 +458,7 @@ export const AdminPortfolioForm: React.FC = () => {
                                   onClick={() => removeHighlight(highlight)}
                                   className="text-[rgb(var(--color-muted-foreground))] hover:text-red-500"
                                 >
-                                  <Trash2 size={14} />
+                                  <Icon icon="lucide:trash2" width={14} height={14} />
                                 </button>
                               </div>
                             ))}
@@ -603,7 +589,7 @@ export const AdminPortfolioForm: React.FC = () => {
                     disabled={isSubmitting}
                     className="w-full flex items-center justify-center px-4 py-3 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <Save size={16} className="mr-2" />
+                    <Icon icon="lucide:save" width={16} height={16} className="mr-2" />
                     {isSubmitting ? 'Saving...' : (isEditing ? 'Update Project' : 'Create Project')}
                   </button>
                   

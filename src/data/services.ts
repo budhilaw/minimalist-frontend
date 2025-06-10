@@ -1,5 +1,3 @@
-import { Code, Users, Settings, Search, Rocket, Shield, LucideIcon } from 'lucide-react';
-
 export interface Service {
   id: string;
   title: string;
@@ -23,13 +21,13 @@ export interface Service {
 }
 
 // Icon mapping for display purposes
-export const iconMap: Record<string, LucideIcon> = {
-  'code': Code,
-  'users': Users,
-  'settings': Settings,
-  'search': Search,
-  'rocket': Rocket,
-  'shield': Shield
+export const iconMap: Record<string, string> = {
+  'code': 'lucide:code',
+  'users': 'lucide:users',
+  'settings': 'lucide:settings',
+  'search': 'lucide:search',
+  'rocket': 'lucide:rocket',
+  'shield': 'lucide:shield'
 };
 
 export const services: Service[] = [

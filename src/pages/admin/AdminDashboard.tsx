@@ -1,18 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FileText, 
-  Briefcase, 
-  MessageSquare, 
-  TrendingUp, 
-  Eye, 
-  Users, 
-  Activity,
-  Plus,
-  BarChart3,
-  Calendar,
-  Clock
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 interface StatCard {
   title: string;
@@ -40,7 +28,7 @@ export const AdminDashboard: React.FC = () => {
       value: 12,
       change: '+2',
       trend: 'up',
-      icon: <FileText size={24} />,
+      icon: <Icon icon="lucide:file-text" width={24} height={24} />,
       link: '/admin/posts'
     },
     {
@@ -48,7 +36,7 @@ export const AdminDashboard: React.FC = () => {
       value: 6,
       change: '+1',
       trend: 'up',
-      icon: <Briefcase size={24} />,
+      icon: <Icon icon="lucide:briefcase" width={24} height={24} />,
       link: '/admin/portfolio'
     },
     {
@@ -56,7 +44,7 @@ export const AdminDashboard: React.FC = () => {
       value: 48,
       change: '+8',
       trend: 'up',
-      icon: <MessageSquare size={24} />,
+      icon: <Icon icon="lucide:message-square" width={24} height={24} />,
       link: '/admin/comments'
     },
     {
@@ -64,7 +52,7 @@ export const AdminDashboard: React.FC = () => {
       value: '2.4K',
       change: '+12%',
       trend: 'up',
-      icon: <Eye size={24} />,
+      icon: <Icon icon="lucide:eye" width={24} height={24} />,
       link: '#'
     }
   ];
@@ -105,14 +93,14 @@ export const AdminDashboard: React.FC = () => {
     {
       title: 'New Blog Post',
       description: 'Create a new blog post',
-      icon: <Plus size={20} />,
+      icon: <Icon icon="lucide:plus" width={20} height={20} />,
       link: '/admin/posts/new',
       color: 'bg-blue-500'
     },
     {
       title: 'Add Project',
       description: 'Add new portfolio project',
-      icon: <Briefcase size={20} />,
+      icon: <Icon icon="lucide:briefcase" width={20} height={20} />,
       link: '/admin/portfolio/new',
       color: 'bg-green-500'
     },
@@ -120,7 +108,7 @@ export const AdminDashboard: React.FC = () => {
     {
       title: 'View Analytics',
       description: 'Check website analytics',
-      icon: <BarChart3 size={20} />,
+      icon: <Icon icon="lucide:bar-chart3" width={20} height={20} />,
       link: '#',
       color: 'bg-orange-500'
     }
@@ -129,21 +117,21 @@ export const AdminDashboard: React.FC = () => {
   const getActivityIcon = (type: RecentActivity['type']) => {
     switch (type) {
       case 'post':
-        return <FileText size={16} className="text-blue-500" />;
+        return <Icon icon="lucide:file-text" width={16} height={16} className="text-blue-500" />;
       case 'comment':
-        return <MessageSquare size={16} className="text-green-500" />;
+        return <Icon icon="lucide:message-square" width={16} height={16} className="text-green-500" />;
       case 'project':
-        return <Briefcase size={16} className="text-purple-500" />;
+        return <Icon icon="lucide:briefcase" width={16} height={16} className="text-purple-500" />;
       case 'login':
-        return <Activity size={16} className="text-orange-500" />;
+        return <Icon icon="lucide:activity" width={16} height={16} className="text-orange-500" />;
       default:
-        return <Activity size={16} className="text-gray-500" />;
+        return <Icon icon="lucide:activity" width={16} height={16} className="text-gray-500" />;
     }
   };
 
   const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
     if (trend === 'up') {
-      return <TrendingUp size={16} className="text-green-500" />;
+      return <Icon icon="lucide:trending-up" width={16} height={16} className="text-green-500" />;
     }
     return null;
   };
@@ -157,7 +145,7 @@ export const AdminDashboard: React.FC = () => {
           Manage your portfolio, blog posts, and website content from this central hub.
         </p>
         <div className="flex items-center text-sm text-blue-100">
-          <Calendar size={16} className="mr-2" />
+          <Icon icon="lucide:calendar" width={16} height={16} className="mr-2" />
           <span>Last login: {new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -255,7 +243,7 @@ export const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex items-center text-xs text-[rgb(var(--color-muted-foreground))]">
-                    <Clock size={12} className="mr-1" />
+                    <Icon icon="lucide:clock" width={12} height={12} className="mr-1" />
                     <span>{activity.timestamp}</span>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useComments } from '../../hooks/useComments';
 import { CommentForm } from './CommentForm';
 import { CommentItem } from './CommentItem';
@@ -29,7 +29,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     <div className="mt-16 pt-8 border-t border-[rgb(var(--color-border))]">
       {/* Comments Header */}
       <div className="flex items-center mb-8">
-        <MessageCircle size={24} className="mr-3 text-[rgb(var(--color-primary))]" />
+        <Icon icon="lucide:message-circle" width={24} height={24} className="mr-3 text-[rgb(var(--color-primary))]" />
         <h2 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
           Comments ({comments.length})
         </h2>
@@ -60,7 +60,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
           ))
         ) : (
           <div className="text-center py-8">
-            <MessageCircle size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+            <Icon icon="lucide:message-circle" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
             <p className="text-[rgb(var(--color-muted-foreground))]">
               No comments yet. Be the first to share your thoughts!
             </p>

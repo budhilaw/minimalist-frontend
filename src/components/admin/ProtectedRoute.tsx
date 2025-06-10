@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,7 +20,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Validate session on route access
   useEffect(() => {
     if (isAuthenticated) {
-      validateSession();
+      validateSession().catch(err => {
+        // Session validation failed - handled by useAuth hook
+      });
     }
   }, [isAuthenticated, validateSession, location.pathname]);
 
@@ -29,7 +31,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--color-background))]">
         <div className="text-center">
-          <Loader2 size={48} className="animate-spin text-[rgb(var(--color-primary))] mx-auto mb-4" />
+          <Icon icon="lucide:loader2" width={48} height={48} className="animate-spin text-[rgb(var(--color-primary))] mx-auto mb-4" />
           <p className="text-[rgb(var(--color-muted-foreground))]">Verifying authentication...</p>
         </div>
       </div>

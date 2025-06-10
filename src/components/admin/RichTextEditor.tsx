@@ -1,21 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  Bold,
-  Italic,
-  Underline,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  Link,
-  Type,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Undo,
-  Redo,
-  Eye
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 interface RichTextEditorProps {
   value: string;
@@ -249,17 +233,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 mr-3">
               <ToolbarButton
                 onClick={formatBold}
-                icon={<Bold size={16} />}
+                icon={<Icon icon="lucide:bold" width={16} height={16} />}
                 title="Bold (**text**)"
               />
               <ToolbarButton
                 onClick={formatItalic}
-                icon={<Italic size={16} />}
+                icon={<Icon icon="lucide:italic" width={16} height={16} />}
                 title="Italic (*text*)"
               />
               <ToolbarButton
                 onClick={formatCode}
-                icon={<Code size={16} />}
+                icon={<Icon icon="lucide:code" width={16} height={16} />}
                 title="Inline Code (`code`)"
               />
             </div>
@@ -268,17 +252,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 mr-3">
               <ToolbarButton
                 onClick={formatH1}
-                icon={<Type size={16} />}
+                icon={<Icon icon="lucide:type" width={16} height={16} />}
                 title="Heading 1 (# text)"
               />
               <ToolbarButton
                 onClick={formatH2}
-                icon={<Type size={14} />}
+                icon={<Icon icon="lucide:type" width={14} height={14} />}
                 title="Heading 2 (## text)"
               />
               <ToolbarButton
                 onClick={formatH3}
-                icon={<Type size={12} />}
+                icon={<Icon icon="lucide:type" width={12} height={12} />}
                 title="Heading 3 (### text)"
               />
             </div>
@@ -287,12 +271,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 mr-3">
               <ToolbarButton
                 onClick={formatUnorderedList}
-                icon={<List size={16} />}
+                icon={<Icon icon="lucide:list" width={16} height={16} />}
                 title="Bullet List (- item)"
               />
               <ToolbarButton
                 onClick={formatOrderedList}
-                icon={<ListOrdered size={16} />}
+                icon={<Icon icon="lucide:list-ordered" width={16} height={16} />}
                 title="Numbered List (1. item)"
               />
             </div>
@@ -301,12 +285,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 mr-3">
               <ToolbarButton
                 onClick={formatQuote}
-                icon={<Quote size={16} />}
+                icon={<Icon icon="lucide:quote" width={16} height={16} />}
                 title="Quote (> text)"
               />
               <ToolbarButton
                 onClick={formatCodeBlock}
-                icon={<Code size={16} />}
+                icon={<Icon icon="lucide:code" width={16} height={16} />}
                 title="Code Block (```)"
               />
             </div>
@@ -315,7 +299,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 mr-3">
               <ToolbarButton
                 onClick={() => setShowLinkDialog(true)}
-                icon={<Link size={16} />}
+                icon={<Icon icon="lucide:link" width={16} height={16} />}
                 title="Insert Link"
               />
             </div>
@@ -324,7 +308,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div className="flex items-center gap-1 ml-auto">
               <ToolbarButton
                 onClick={() => setShowPreview(!showPreview)}
-                icon={<Eye size={16} />}
+                icon={<Icon icon="lucide:eye" width={16} height={16} />}
                 title={showPreview ? "Edit" : "Preview"}
                 active={showPreview}
               />

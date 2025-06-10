@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContentAvailability } from '../hooks/useContentAvailability';
 
@@ -107,7 +107,7 @@ export const Header: React.FC = () => {
               className="p-2 rounded-md text-[rgb(var(--color-foreground))] hover:text-[rgb(var(--color-primary))] hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
               aria-label="Toggle theme"
             >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              {isDark ? <Icon icon="lucide:sun" width={20} height={20} /> : <Icon icon="lucide:moon" width={20} height={20} />}
             </button>
 
             {/* Mobile menu button */}
@@ -116,7 +116,7 @@ export const Header: React.FC = () => {
               className="md:hidden p-2 rounded-md text-[rgb(var(--color-foreground))] hover:text-[rgb(var(--color-primary))] hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMenuOpen ? <Icon icon="lucide:x" width={20} height={20} /> : <Icon icon="lucide:menu" width={20} height={20} />}
             </button>
           </div>
         </div>

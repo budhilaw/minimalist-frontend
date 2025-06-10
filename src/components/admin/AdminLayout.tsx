@@ -1,25 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Briefcase, 
-  Settings, 
-  User, 
-  MessageSquare,
-  LogOut,
-  Menu,
-  X,
-  Shield,
-  Bell,
-  Activity,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  Trash2
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { AuditLogger } from '../../utils/security';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 interface NavItem {
   path: string;
@@ -47,125 +31,89 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'New Comment',
-      message: 'Sarah Johnson commented on "React Best Practices"',
-      type: 'info',
-      timestamp: '2 hours ago',
-      read: false,
-      action: {
-        label: 'View Comment',
-        url: '/admin/comments'
-      }
-    },
-    {
-      id: '2',
-      title: 'Blog Post Published',
-      message: 'Your post "Building Microservices" is now live',
-      type: 'success',
-      timestamp: '5 hours ago',
-      read: false,
-      action: {
-        label: 'View Post',
-        url: '/blog/building-microservices'
-      }
-    },
-    {
-      id: '3',
-      title: 'Portfolio Updated',
-      message: 'E-commerce Platform project has been updated',
-      type: 'info',
-      timestamp: '1 day ago',
-      read: true
-    },
-    {
-      id: '4',
-      title: 'Security Alert',
-      message: 'New login from Chrome on macOS',
-      type: 'warning',
-      timestamp: '2 days ago',
-      read: true
-    }
-  ]);
+  const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications();
 
   const navItems: NavItem[] = [
     {
       path: '/admin',
       label: 'Dashboard',
-      icon: <LayoutDashboard size={20} />
+      icon: <Icon icon="lucide:layout-dashboard" width={20} height={20} />
     },
     {
       path: '/admin/posts',
       label: 'Blog Posts',
-      icon: <FileText size={20} />,
+      icon: <Icon icon="lucide:file-text" width={20} height={20} />,
       count: 12 // This would come from API
     },
     {
       path: '/admin/portfolio',
       label: 'Portfolio',
-      icon: <Briefcase size={20} />,
+      icon: <Icon icon="lucide:briefcase" width={20} height={20} />,
       count: 6
     },
     {
       path: '/admin/services',
       label: 'Services',
-      icon: <Settings size={20} />,
+      icon: <Icon icon="lucide:cog" width={20} height={20} />,
       count: 4
     },
-
     {
       path: '/admin/comments',
       label: 'Comments',
-      icon: <MessageSquare size={20} />,
+      icon: <Icon icon="lucide:message-square" width={20} height={20} />,
       count: 8
+    },
+    {
+      path: '/admin/audit-logs',
+      label: 'Audit Logs',
+      icon: <Icon icon="lucide:scroll-text" width={20} height={20} />
+    },
+    {
+      path: '/admin/settings',
+      label: 'Settings',
+      icon: <Icon icon="lucide:settings" width={20} height={20} />
     },
     {
       path: '/admin/profile',
       label: 'Profile',
-      icon: <User size={20} />
+      icon: <Icon icon="lucide:user" width={20} height={20} />
     }
   ];
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: any) => {
     // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-    );
+    markAsRead(notification.id);
     
     // Navigate if action exists
-    if (notification.action) {
-      if (notification.action.url.startsWith('/')) {
-        navigate(notification.action.url);
+    if (notification.actionUrl) {
+      if (notification.actionUrl.startsWith('/')) {
+        navigate(notification.actionUrl);
       } else {
-        window.open(notification.action.url, '_blank');
+        window.open(notification.actionUrl, '_blank');
       }
     }
     
     setNotificationsOpen(false);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
   };
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    removeNotification(id);
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'success':
-        return <CheckCircle size={16} className="text-green-500" />;
+        return <Icon icon="lucide:check-circle" width={16} height={16} className="text-green-500" />;
       case 'warning':
-        return <AlertCircle size={16} className="text-orange-500" />;
+        return <Icon icon="lucide:alert-circle" width={16} height={16} className="text-orange-500" />;
       case 'error':
-        return <AlertCircle size={16} className="text-red-500" />;
+        return <Icon icon="lucide:alert-circle" width={16} height={16} className="text-red-500" />;
       default:
-        return <Info size={16} className="text-blue-500" />;
+        return <Icon icon="lucide:info" width={16} height={16} className="text-blue-500" />;
     }
   };
 
@@ -199,7 +147,7 @@ export const AdminLayout: React.FC = () => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 border-b border-[rgb(var(--color-border))]">
           <div className="flex items-center">
-            <Shield className="text-[rgb(var(--color-primary))] mr-3" size={24} />
+            <Icon icon="lucide:shield" className="text-[rgb(var(--color-primary))] mr-3" width={24} height={24} />
             <h1 className="text-xl font-bold text-[rgb(var(--color-foreground))]">
               Admin Panel
             </h1>
@@ -208,7 +156,7 @@ export const AdminLayout: React.FC = () => {
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
           >
-            <X size={20} />
+            <Icon icon="lucide:x" width={20} height={20} />
           </button>
         </div>
 
@@ -270,7 +218,7 @@ export const AdminLayout: React.FC = () => {
             onClick={handleLogout}
             className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors duration-200"
           >
-            <LogOut size={20} />
+            <Icon icon="lucide:log-out" width={20} height={20} />
             <span className="ml-3">Sign Out</span>
           </button>
         </div>
@@ -286,7 +234,7 @@ export const AdminLayout: React.FC = () => {
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]"
             >
-              <Menu size={24} />
+              <Icon icon="lucide:menu" width={24} height={24} />
             </button>
 
             {/* Page Title */}
@@ -300,7 +248,7 @@ export const AdminLayout: React.FC = () => {
             <div className="flex items-center space-x-4">
               {/* Activity Indicator */}
               <div className="flex items-center text-sm text-[rgb(var(--color-muted-foreground))]">
-                <Activity size={16} className="mr-2 text-green-500" />
+                <Icon icon="lucide:activity" width={16} height={16} className="mr-2 text-green-500" />
                 <span>Online</span>
               </div>
 
@@ -310,7 +258,7 @@ export const AdminLayout: React.FC = () => {
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                   className="relative p-2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))] rounded-md transition-colors"
                 >
-                  <Bell size={20} />
+                  <Icon icon="lucide:bell" width={20} height={20} />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                       {unreadCount}
@@ -333,7 +281,7 @@ export const AdminLayout: React.FC = () => {
                         </h3>
                         {unreadCount > 0 && (
                           <button
-                            onClick={markAllAsRead}
+                            onClick={handleMarkAllAsRead}
                             className="text-xs text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80"
                           >
                             Mark all as read
@@ -376,7 +324,7 @@ export const AdminLayout: React.FC = () => {
                                       }}
                                       className="opacity-0 group-hover:opacity-100 text-[rgb(var(--color-muted-foreground))] hover:text-red-500 transition-all ml-2"
                                     >
-                                      <Trash2 size={14} />
+                                      <Icon icon="lucide:trash2" width={14} height={14} />
                                     </button>
                                   </div>
                                   <p className="text-xs text-[rgb(var(--color-muted-foreground))] mt-1">
@@ -386,9 +334,9 @@ export const AdminLayout: React.FC = () => {
                                     <span className="text-xs text-[rgb(var(--color-muted-foreground))]">
                                       {notification.timestamp}
                                     </span>
-                                    {notification.action && (
+                                    {notification.actionLabel && (
                                       <span className="text-xs text-[rgb(var(--color-primary))] font-medium">
-                                        {notification.action.label}
+                                        {notification.actionLabel}
                                       </span>
                                     )}
                                   </div>

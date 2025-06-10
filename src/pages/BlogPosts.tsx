@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Search, Tag, ArrowRight } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { usePublishedPosts } from '../hooks/useBlog';
 import { LoadingSection, ErrorMessage } from '../components/LoadingSpinner';
 
@@ -100,7 +100,7 @@ export const BlogPosts: React.FC = () => {
           <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
             {/* Search Bar */}
             <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] w-5 h-5" />
+              <Icon icon="lucide:search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search posts, tags, or content..."
@@ -216,11 +216,11 @@ export const BlogPosts: React.FC = () => {
                 <div className="flex items-center justify-between mb-4 text-sm text-[rgb(var(--color-muted-foreground))]">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
-                      <Calendar size={14} className="mr-1" />
+                      <Icon icon="lucide:calendar" width={14} height={14} className="mr-1" />
                       {formatDate(post.published_at || post.created_at)}
                     </div>
                     <div className="flex items-center">
-                      <Clock size={14} className="mr-1" />
+                      <Icon icon="lucide:clock" width={14} height={14} className="mr-1" />
                       {Math.ceil(post.content.split(' ').length / 200)} min read
                     </div>
                   </div>
@@ -245,7 +245,7 @@ export const BlogPosts: React.FC = () => {
                   className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                 >
                   Read More
-                  <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+                  <Icon icon="lucide:arrow-right" width={14} height={14} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
                 </div>
               </article>
@@ -254,7 +254,7 @@ export const BlogPosts: React.FC = () => {
         ) : (
           /* No Results */
           <div className="text-center py-12">
-            <Tag size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+            <Icon icon="lucide:tag" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
             <h3 className="text-xl font-semibold text-[rgb(var(--color-foreground))] mb-2">
               No posts found
             </h3>

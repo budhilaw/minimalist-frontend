@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Save, 
-  Eye, 
-  ArrowLeft, 
-  Plus, 
-  X, 
-  Calendar,
-  Tag,
-  User,
-  Globe,
-  FileText,
-  Star,
-  Image as ImageIcon
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
 import { blogPosts } from '../../data/blogPosts';
 import { Sanitizer, AuditLogger } from '../../utils/security';
@@ -62,6 +49,7 @@ export const AdminPostForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<'content' | 'seo' | 'settings'>('content');
+
 
   // Available categories
   const categories = [
@@ -206,18 +194,14 @@ export const AdminPostForm: React.FC = () => {
         published: sanitizedData.published
       });
 
-      // In a real app, this would make an API call
-      console.log(isEditing ? 'Updating post:' : 'Creating post:', sanitizedData);
-
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Navigate back to posts list
       navigate('/admin/posts');
-    } catch (error) {
-      console.error('Error saving post:', error);
-      alert('Error saving post. Please try again.');
-    } finally {
+          } catch (error) {
+        alert('Error saving post. Please try again.');
+      } finally {
       setIsSubmitting(false);
     }
   };
@@ -244,7 +228,7 @@ export const AdminPostForm: React.FC = () => {
             to="/admin/posts"
             className="flex items-center text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors"
           >
-            <ArrowLeft size={20} className="mr-2" />
+            <Icon icon="lucide:arrow-left" width={20} height={20} className="mr-2" />
             Back to Posts
           </Link>
           <div>
@@ -263,7 +247,7 @@ export const AdminPostForm: React.FC = () => {
             onClick={() => setShowPreview(!showPreview)}
             className="flex items-center px-4 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors"
           >
-            <Eye size={16} className="mr-2" />
+            <Icon icon="lucide:eye" width={16} height={16} className="mr-2" />
             {showPreview ? 'Hide Preview' : 'Preview'}
           </button>
         </div>
@@ -281,7 +265,7 @@ export const AdminPostForm: React.FC = () => {
                 onClick={() => setShowPreview(false)}
                 className="p-2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] transition-colors"
               >
-                <X size={20} />
+                <Icon icon="lucide:x" width={20} height={20} />
               </button>
             </div>
             
@@ -294,15 +278,15 @@ export const AdminPostForm: React.FC = () => {
                   
                   <div className="flex flex-wrap items-center gap-4 text-sm text-[rgb(var(--color-muted-foreground))] mb-4">
                     <div className="flex items-center gap-2">
-                      <User size={16} />
+                      <Icon icon="lucide:user" width={16} height={16} />
                       <span>Ericsson Budhilaw</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar size={16} />
+                      <Icon icon="lucide:calendar" width={16} height={16} />
                       <span>{new Date(formData.publishDate).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Tag size={16} />
+                      <Icon icon="lucide:tag" width={16} height={16} />
                       <span>{formData.category}</span>
                     </div>
                   </div>
@@ -478,9 +462,9 @@ export const AdminPostForm: React.FC = () => {
               <div className="border-b border-[rgb(var(--color-border))]">
                 <nav className="flex tab-navigation">
                   {[
-                    { id: 'content', label: 'Content', icon: <FileText size={16} /> },
-                    { id: 'seo', label: 'SEO', icon: <Globe size={16} /> },
-                    { id: 'settings', label: 'Settings', icon: <Star size={16} /> }
+                    { id: 'content', label: 'Content', icon: <Icon icon="lucide:file-text" width={16} height={16} /> },
+                    { id: 'seo', label: 'SEO', icon: <Icon icon="lucide:globe" width={16} height={16} /> },
+                    { id: 'settings', label: 'Settings', icon: <Icon icon="lucide:star" width={16} height={16} /> }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -598,7 +582,7 @@ export const AdminPostForm: React.FC = () => {
                               onClick={() => removeKeyword(keyword)}
                               className="ml-2 text-[rgb(var(--color-muted-foreground))] hover:text-red-600"
                             >
-                              <X size={14} />
+                              <Icon icon="lucide:x" width={14} height={14} />
                             </button>
                           </span>
                         ))}
@@ -622,7 +606,7 @@ export const AdminPostForm: React.FC = () => {
                           onClick={addKeyword}
                           className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
                         >
-                          <Plus size={16} />
+                          <Icon icon="lucide:plus" width={16} height={16} />
                         </button>
                       </div>
                     </div>
@@ -719,7 +703,7 @@ export const AdminPostForm: React.FC = () => {
                     disabled={isSubmitting}
                     className="w-full flex items-center justify-center px-4 py-3 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed form-input"
                   >
-                    <Save size={16} className="mr-2" />
+                    <Icon icon="lucide:save" width={16} height={16} className="mr-2" />
                     {isSubmitting 
                       ? 'Saving...' 
                       : isEditing
@@ -755,14 +739,14 @@ export const AdminPostForm: React.FC = () => {
                       key={index}
                       className="inline-flex items-center px-3 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] rounded-full text-sm"
                     >
-                      <Tag size={12} className="mr-1" />
+                      <Icon icon="lucide:tag" width={12} height={12} className="mr-1" />
                       {tag}
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
                         className="ml-2 text-[rgb(var(--color-muted-foreground))] hover:text-red-600"
                       >
-                        <X size={14} />
+                        <Icon icon="lucide:x" width={14} height={14} />
                       </button>
                     </span>
                   ))}
@@ -787,7 +771,7 @@ export const AdminPostForm: React.FC = () => {
                     onClick={addTag}
                     className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
                   >
-                    <Plus size={16} />
+                    <Icon icon="lucide:plus" width={16} height={16} />
                   </button>
                 </div>
               </div>

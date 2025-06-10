@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ export const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    // Handle form submission - implement API call
     setIsSubmitted(true);
     
     setTimeout(() => {
@@ -43,19 +43,19 @@ export const Contact: React.FC = () => {
 
   const contactInfo = [
     {
-      icon: Mail,
+      icon: 'lucide:mail',
       label: 'Email',
       value: 'ericsson@budhilaw.com',
       href: 'mailto:ericsson@budhilaw.com'
     },
     {
-      icon: MapPin,
+      icon: 'lucide:map-pin',
       label: 'Location',
       value: 'East Java, Indonesia (Remote)',
       href: null
     },
     {
-      icon: Clock,
+      icon: 'lucide:clock',
       label: 'Timezone',
       value: 'WIB (UTC+7)',
       href: null
@@ -85,12 +85,11 @@ export const Contact: React.FC = () => {
 
             <div className="space-y-6 mb-8">
               {contactInfo.map((item, index) => {
-                const IconComponent = item.icon;
                 return (
                   <div key={index} className="flex items-start">
                     <div className="flex-shrink-0">
                       <div className="flex items-center justify-center w-10 h-10 bg-[rgb(var(--color-primary))] rounded-lg">
-                        <IconComponent className="w-5 h-5 text-white" />
+                        <Icon icon={item.icon} className="w-5 h-5 text-white" />
                       </div>
                     </div>
                     <div className="ml-4">
@@ -186,13 +185,13 @@ export const Contact: React.FC = () => {
                     type="submit"
                     className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[rgb(var(--color-primary))] hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
                   >
-                    <Send className="mr-2 -ml-1 w-5 h-5" />
+                    <Icon icon="lucide:send" className="mr-2 -ml-1 w-5 h-5" />
                     Send Message
                   </button>
                 </form>
               ) : (
                 <div className="text-center py-8">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <Icon icon="lucide:check-circle" className="w-16 h-16 text-green-500 mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-2">
                     Message Sent Successfully!
                   </h3>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Github, Play, Code, Smartphone, Globe, Database, Zap } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { usePortfolio, useFeaturedProjects } from '../hooks/usePortfolio';
 import { LoadingSection, ErrorMessage } from './LoadingSpinner';
 
@@ -20,11 +20,11 @@ export const Portfolio: React.FC = () => {
   } = useFeaturedProjects();
 
   const categories = [
-    { id: 'all', name: 'All Projects', icon: Globe },
-    { id: 'web', name: 'Web Apps', icon: Code },
-    { id: 'mobile', name: 'Mobile', icon: Smartphone },
-    { id: 'backend', name: 'Backend', icon: Database },
-    { id: 'ai', name: 'AI/ML', icon: Zap }
+    { id: 'all', name: 'All Projects', icon: 'lucide:globe' },
+    { id: 'web', name: 'Web Apps', icon: 'lucide:code' },
+    { id: 'mobile', name: 'Mobile', icon: 'lucide:smartphone' },
+    { id: 'backend', name: 'Backend', icon: 'lucide:database' },
+    { id: 'ai', name: 'AI/ML', icon: 'lucide:zap' }
   ];
 
   // Helper function to get project icon/image
@@ -67,7 +67,6 @@ export const Portfolio: React.FC = () => {
         {/* Category Filters */}
         <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-12">
           {categories.map((category) => {
-            const IconComponent = category.icon;
             return (
               <button
                 key={category.id}
@@ -78,7 +77,7 @@ export const Portfolio: React.FC = () => {
                     : 'bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-primary))] hover:text-white'
                 }`}
               >
-                <IconComponent size={14} className="mr-1 sm:mr-2" />
+                <Icon icon={category.icon} width={14} height={14} className="mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{category.name}</span>
                 <span className="sm:hidden">{category.name.split(' ')[0]}</span>
               </button>
@@ -146,7 +145,7 @@ export const Portfolio: React.FC = () => {
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
                         >
-                          <Play size={16} className="mr-2" />
+                          <Icon icon="lucide:play" width={16} height={16} className="mr-2" />
                           Live Demo
                         </a>
                       )}
@@ -157,7 +156,7 @@ export const Portfolio: React.FC = () => {
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center px-4 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
                         >
-                          <Github size={16} className="mr-2" />
+                          <Icon icon="simple-icons:github" width={16} height={16} className="mr-2" />
                           View Code
                         </a>
                       )}
@@ -251,7 +250,7 @@ export const Portfolio: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200 text-sm"
                       >
-                        <ExternalLink size={14} className="mr-1" />
+                        <Icon icon="lucide:external-link" width={14} height={14} className="mr-1" />
                         Demo
                       </a>
                     )}
@@ -262,7 +261,7 @@ export const Portfolio: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors duration-200 text-sm"
                       >
-                        <Github size={14} className="mr-1" />
+                        <Icon icon="simple-icons:github" width={14} height={14} className="mr-1" />
                         Code
                       </a>
                     )}

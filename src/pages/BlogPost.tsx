@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { Calendar, Clock, User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useSinglePost, usePublishedPosts } from '../hooks/useBlog';
 import { CommentSection } from '../components/comments';
 import { LoadingSpinner, ErrorMessage } from '../components/LoadingSpinner';
@@ -34,7 +34,7 @@ export const BlogPost: React.FC = () => {
               to="/blog"
               className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80"
             >
-              <ArrowLeft size={16} className="mr-2" />
+              <Icon icon="lucide:arrow-left" width={16} height={16} className="mr-2" />
               Back to Blog
             </Link>
           </div>
@@ -75,7 +75,7 @@ export const BlogPost: React.FC = () => {
             to="/blog"
             className="inline-flex items-center text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
           >
-            <ArrowLeft size={16} className="mr-2" />
+            <Icon icon="lucide:arrow-left" width={16} height={16} className="mr-2" />
             Back to Blog
           </Link>
         </div>
@@ -117,15 +117,15 @@ export const BlogPost: React.FC = () => {
           {/* Meta Information */}
           <div className="flex flex-wrap items-center gap-6 text-[rgb(var(--color-muted-foreground))] mb-6">
             <div className="flex items-center">
-              <User size={16} className="mr-2" />
+              <Icon icon="lucide:user" width={16} height={16} className="mr-2" />
               <span>Admin</span>
             </div>
             <div className="flex items-center">
-              <Calendar size={16} className="mr-2" />
+              <Icon icon="lucide:calendar" width={16} height={16} className="mr-2" />
               <span>{formatDate(post.published_at || post.created_at)}</span>
             </div>
             <div className="flex items-center">
-              <Clock size={16} className="mr-2" />
+              <Icon icon="lucide:clock" width={16} height={16} className="mr-2" />
               <span>{Math.ceil(post.content.split(' ').length / 200)} min read</span>
             </div>
           </div>
@@ -252,7 +252,7 @@ export const BlogPost: React.FC = () => {
                 className="group p-6 bg-[rgb(var(--color-muted))] rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300"
               >
                 <div className="flex items-center text-[rgb(var(--color-muted-foreground))] mb-2">
-                  <ArrowLeft size={16} className="mr-2" />
+                  <Icon icon="lucide:arrow-left" width={16} height={16} className="mr-2" />
                   <span className="text-sm">Previous Post</span>
                 </div>
                 <h3 className="font-semibold text-[rgb(var(--color-foreground))] group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
@@ -269,7 +269,7 @@ export const BlogPost: React.FC = () => {
               >
                 <div className="flex items-center justify-end text-[rgb(var(--color-muted-foreground))] mb-2">
                   <span className="text-sm">Next Post</span>
-                  <ArrowRight size={16} className="ml-2" />
+                  <Icon icon="lucide:arrow-right" width={16} height={16} className="ml-2" />
                 </div>
                 <h3 className="font-semibold text-[rgb(var(--color-foreground))] group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
                   {nextPost.title}
@@ -304,7 +304,7 @@ export const BlogPost: React.FC = () => {
                     {relatedPost.excerpt}
                   </p>
                   <div className="flex items-center mt-3 text-xs text-[rgb(var(--color-muted-foreground))]">
-                    <Clock size={12} className="mr-1" />
+                    <Icon icon="lucide:clock" width={12} height={12} className="mr-1" />
                     {Math.ceil(relatedPost.content.split(' ').length / 200)} min read
                   </div>
                 </Link>

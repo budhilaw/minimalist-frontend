@@ -1,21 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Calendar,
-  Clock,
-  Tag,
-  User,
-  MoreHorizontal,
-  FileText,
-  Star,
-  Copy
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { blogPosts } from '../../data/blogPosts';
 
 interface PostFilters {
@@ -86,8 +71,7 @@ export const AdminPosts: React.FC = () => {
   };
 
   const handleBulkAction = (action: string) => {
-    console.log(`Bulk action: ${action} on posts:`, selectedPosts);
-    // In real app, this would make API calls
+    // Handle bulk actions (implement API calls)
     setSelectedPosts([]);
   };
 
@@ -124,14 +108,14 @@ export const AdminPosts: React.FC = () => {
                 : 'border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))]'
             }`}
           >
-            <Filter size={16} className="mr-2" />
+            <Icon icon="lucide:filter" width={16} height={16} className="mr-2" />
             Filters
           </button>
           <Link
             to="/admin/posts/new"
             className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
           >
-            <Plus size={16} className="mr-2" />
+            <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
             New Post
           </Link>
         </div>
@@ -145,7 +129,7 @@ export const AdminPosts: React.FC = () => {
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Posts</p>
               <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">{blogPosts.length}</p>
             </div>
-            <FileText className="text-[rgb(var(--color-primary))]" size={24} />
+            <Icon icon="lucide:file-text" className="text-[rgb(var(--color-primary))]" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -154,7 +138,7 @@ export const AdminPosts: React.FC = () => {
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Published</p>
               <p className="text-2xl font-bold text-green-600">{blogPosts.length}</p>
             </div>
-            <Eye className="text-green-600" size={24} />
+            <Icon icon="lucide:eye" className="text-green-600" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -163,7 +147,7 @@ export const AdminPosts: React.FC = () => {
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Drafts</p>
               <p className="text-2xl font-bold text-orange-600">0</p>
             </div>
-            <Edit className="text-orange-600" size={24} />
+            <Icon icon="lucide:edit" className="text-orange-600" width={24} height={24} />
           </div>
         </div>
         <div className="bg-[rgb(var(--color-card))] p-4 rounded-lg border border-[rgb(var(--color-border))]">
@@ -174,7 +158,7 @@ export const AdminPosts: React.FC = () => {
                 {blogPosts.filter(post => post.featured).length}
               </p>
             </div>
-            <Star className="text-purple-600" size={24} />
+            <Icon icon="lucide:star" className="text-purple-600" width={24} height={24} />
           </div>
         </div>
       </div>
@@ -188,7 +172,7 @@ export const AdminPosts: React.FC = () => {
                 Search
               </label>
               <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))]" />
+                <Icon icon="lucide:search" width={16} height={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))]" />
                 <input
                   type="text"
                   placeholder="Search posts..."
@@ -327,7 +311,7 @@ export const AdminPosts: React.FC = () => {
                             {post.title}
                           </h3>
                           {post.featured && (
-                            <Star size={14} className="text-yellow-500 fill-current" />
+                            <Icon icon="lucide:star" width={14} height={14} className="text-yellow-500 fill-current" />
                           )}
                         </div>
                         <p className="text-sm text-[rgb(var(--color-muted-foreground))] truncate mt-1">
@@ -335,11 +319,11 @@ export const AdminPosts: React.FC = () => {
                         </p>
                         <div className="flex items-center space-x-4 mt-2">
                           <div className="flex items-center text-xs text-[rgb(var(--color-muted-foreground))]">
-                            <User size={12} className="mr-1" />
+                            <Icon icon="lucide:user" width={12} height={12} className="mr-1" />
                             {post.author.name}
                           </div>
                           <div className="flex items-center text-xs text-[rgb(var(--color-muted-foreground))]">
-                            <Clock size={12} className="mr-1" />
+                            <Icon icon="lucide:clock" width={12} height={12} className="mr-1" />
                             {post.readTime}
                           </div>
                         </div>
@@ -358,7 +342,7 @@ export const AdminPosts: React.FC = () => {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center text-sm text-[rgb(var(--color-muted-foreground))]">
-                      <Calendar size={12} className="mr-1" />
+                      <Icon icon="lucide:calendar" width={12} height={12} className="mr-1" />
                       {formatDate(post.publishDate)}
                     </div>
                   </td>
@@ -370,7 +354,7 @@ export const AdminPosts: React.FC = () => {
                         className="inline-flex items-center px-2 py-1 text-xs text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-transparent hover:border-[rgb(var(--color-border))] rounded transition-colors"
                         title="View Post"
                       >
-                        <Eye size={14} className="mr-1" />
+                        <Icon icon="lucide:eye" width={14} height={14} className="mr-1" />
                         View
                       </Link>
                       <Link
@@ -378,7 +362,7 @@ export const AdminPosts: React.FC = () => {
                         className="inline-flex items-center px-2 py-1 text-xs bg-[rgb(var(--color-primary))] text-white hover:bg-[rgb(var(--color-primary))]/90 rounded transition-colors"
                         title="Edit Post"
                       >
-                        <Edit size={14} className="mr-1" />
+                        <Icon icon="lucide:edit" width={14} height={14} className="mr-1" />
                         Edit
                       </Link>
                       <button
@@ -386,7 +370,7 @@ export const AdminPosts: React.FC = () => {
                         className="inline-flex items-center px-2 py-1 text-xs text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-transparent hover:border-[rgb(var(--color-border))] rounded transition-colors"
                         title="Duplicate Post"
                       >
-                        <Copy size={14} className="mr-1" />
+                        <Icon icon="lucide:copy" width={14} height={14} className="mr-1" />
                         Copy
                       </button>
                       <button
@@ -394,7 +378,7 @@ export const AdminPosts: React.FC = () => {
                         className="inline-flex items-center px-2 py-1 text-xs text-[rgb(var(--color-muted-foreground))] hover:text-red-600 border border-transparent hover:border-red-200 rounded transition-colors"
                         title="Delete Post"
                       >
-                        <Trash2 size={14} className="mr-1" />
+                        <Icon icon="lucide:trash2" width={14} height={14} className="mr-1" />
                         Delete
                       </button>
                     </div>
@@ -407,7 +391,7 @@ export const AdminPosts: React.FC = () => {
 
         {filteredPosts.length === 0 && (
           <div className="text-center py-12">
-            <FileText size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+            <Icon icon="lucide:file-text" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
             <h3 className="text-lg font-medium text-[rgb(var(--color-foreground))] mb-2">
               No posts found
             </h3>
@@ -422,7 +406,7 @@ export const AdminPosts: React.FC = () => {
                 to="/admin/posts/new"
                 className="inline-flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
               >
-                <Plus size={16} className="mr-2" />
+                <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
                 Create Your First Post
               </Link>
             )}

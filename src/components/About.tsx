@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, MapPin, Award, BookOpen } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 export const About: React.FC = () => {
   const workHistory = [
@@ -111,7 +111,7 @@ export const About: React.FC = () => {
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
                       <div className="flex items-center justify-center w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full">
-                        <Calendar className="w-4 h-4 text-white" />
+                        <Icon icon="lucide:calendar" className="w-4 h-4 text-white" />
                       </div>
                     </div>
                     <div className="ml-4 flex-1">
@@ -184,7 +184,7 @@ export const About: React.FC = () => {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[rgb(var(--color-background))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
             <div className="flex items-center mb-4">
-              <BookOpen className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
+              <Icon icon="lucide:book-open" className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
               <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">Education</h4>
             </div>
             <div className="space-y-3">
@@ -197,7 +197,7 @@ export const About: React.FC = () => {
 
           <div className="bg-[rgb(var(--color-background))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
             <div className="flex items-center mb-4">
-              <Award className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
+              <Icon icon="lucide:award" className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
               <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">Certifications & Awards</h4>
             </div>
             <div className="space-y-3 text-sm">

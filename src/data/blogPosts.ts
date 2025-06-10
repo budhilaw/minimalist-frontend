@@ -463,9 +463,9 @@ async function fetchUser(id: string): Promise<Result<User, string>> {
 // Usage
 const result = await fetchUser('123');
 if (result.success) {
-  console.log(result.data.name); // TypeScript knows this is User
+  // TypeScript knows this is User
 } else {
-  console.error(result.error); // TypeScript knows this is string
+  // TypeScript knows this is string
 }
 \`\`\`
 
@@ -988,9 +988,7 @@ Before optimizing, measure current performance:
 import { Profiler } from 'react';
 
 function onRender(id, phase, actualDuration) {
-  console.log('Component:', id);
-  console.log('Phase:', phase);
-  console.log('Duration:', actualDuration);
+  // Performance monitoring can be implemented here if needed
 }
 
 <Profiler id="App" onRender={onRender}>
@@ -1394,7 +1392,7 @@ function usePerformanceMonitor(componentName) {
     
     return () => {
       const endTime = performance.now();
-      console.log(\`\${componentName} render time: \${endTime - startTime}ms\`);
+      // Performance monitoring can be implemented here
     };
   });
 }
@@ -1411,7 +1409,7 @@ import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
 
 function sendToAnalytics(metric) {
   // Send to your analytics service
-  console.log(metric);
+      // Web vitals can be sent to analytics service
 }
 
 getCLS(sendToAnalytics);

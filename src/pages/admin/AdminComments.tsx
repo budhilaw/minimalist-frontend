@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Filter } from 'lucide-react';
+import { Icon } from '@iconify/react';
 
 export const AdminComments: React.FC = () => {
   return (
@@ -14,13 +14,13 @@ export const AdminComments: React.FC = () => {
           </p>
         </div>
         <button className="flex items-center px-4 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors">
-          <Filter size={16} className="mr-2" />
+          <Icon icon="lucide:filter" width={16} height={16} className="mr-2" />
           Filter Comments
         </button>
       </div>
 
       <div className="bg-[rgb(var(--color-card))] p-12 rounded-lg border border-[rgb(var(--color-border))] text-center">
-        <MessageSquare size={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
+        <Icon icon="lucide:message-square" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
         <h3 className="text-lg font-medium text-[rgb(var(--color-foreground))] mb-2">
           Comments Management Coming Soon
         </h3>

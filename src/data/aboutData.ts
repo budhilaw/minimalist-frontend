@@ -217,10 +217,24 @@ export const aboutData: AboutData = {
       active: true
     },
     {
-      id: 'twitter',
-      platform: 'Twitter',
-      url: 'https://twitter.com/ericssonbudhi',
+      id: 'x',
+      platform: 'X',
+      url: 'https://x.com/ericssonbudhi',
       username: 'ericssonbudhi',
+      active: true
+    },
+    {
+      id: 'facebook',
+      platform: 'Facebook',
+      url: 'https://facebook.com/budhilaw',
+      username: 'budhilaw',
+      active: true
+    },
+    {
+      id: 'instagram',
+      platform: 'Instagram',
+      url: 'https://instagram.com/budhilaw',
+      username: 'budhilaw',
       active: true
     },
     {

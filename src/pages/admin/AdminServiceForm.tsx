@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, Plus, X, Tag, Settings } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
 import { services, iconMap, Service } from '../../data/services';
 
@@ -50,8 +50,6 @@ export const AdminServiceForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log('Saving service:', formData);
     
     // Navigate back to services list
     navigate('/admin/services');
@@ -63,8 +61,6 @@ export const AdminServiceForm: React.FC = () => {
       [field]: value
     }));
   };
-
-
 
   const addFeature = () => {
     if (newFeature.trim()) {
@@ -84,19 +80,19 @@ export const AdminServiceForm: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'basic', name: 'Basic Info', icon: Settings },
-    { id: 'details', name: 'Details & Description', icon: Tag }
+    { id: 'basic', name: 'Basic Info', icon: 'lucide:settings' },
+    { id: 'details', name: 'Details & Description', icon: 'lucide:tag' }
   ];
 
   // Preview component
   const ServicePreview = () => {
-    const IconComponent = iconMap[formData.icon] || iconMap.code;
+    const iconName = iconMap[formData.icon] || iconMap.code;
     
     return (
       <div className="bg-[rgb(var(--color-background))] p-8 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg">
         {/* Icon */}
         <div className="flex items-center justify-center w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg mb-6">
-          <IconComponent className="w-6 h-6 text-white" />
+          <Icon icon={iconName} className="w-6 h-6 text-white" />
         </div>
 
         {/* Content */}
@@ -116,8 +112,6 @@ export const AdminServiceForm: React.FC = () => {
             </li>
           ))}
         </ul>
-
-
       </div>
     );
   };
@@ -131,7 +125,7 @@ export const AdminServiceForm: React.FC = () => {
             onClick={() => navigate('/admin/services')}
             className="p-2 text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] transition-colors"
           >
-            <ArrowLeft size={20} />
+            <Icon icon="lucide:arrow-left" width={20} height={20} />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
@@ -148,14 +142,14 @@ export const AdminServiceForm: React.FC = () => {
             onClick={() => setShowPreview(!showPreview)}
             className="flex items-center px-4 py-2 text-[rgb(var(--color-foreground))] border border-[rgb(var(--color-border))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors"
           >
-            <Eye size={16} className="mr-2" />
+            <Icon icon="lucide:eye" width={16} height={16} className="mr-2" />
             {showPreview ? 'Hide Preview' : 'Show Preview'}
           </button>
           <button
             onClick={handleSubmit}
             className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
           >
-            <Save size={16} className="mr-2" />
+            <Icon icon="lucide:save" width={16} height={16} className="mr-2" />
             {isEditing ? 'Update Service' : 'Create Service'}
           </button>
         </div>
@@ -169,7 +163,6 @@ export const AdminServiceForm: React.FC = () => {
             <div className="border-b border-[rgb(var(--color-border))]">
               <div className="flex overflow-x-auto">
                 {tabs.map((tab) => {
-                  const IconComponent = tab.icon;
                   return (
                     <button
                       key={tab.id}
@@ -180,7 +173,7 @@ export const AdminServiceForm: React.FC = () => {
                           : 'border-transparent text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))]'
                       }`}
                     >
-                      <IconComponent className="w-4 h-4 mr-2" />
+                      <Icon icon={tab.icon} className="w-4 h-4 mr-2" />
                       {tab.name}
                     </button>
                   );
@@ -296,7 +289,7 @@ export const AdminServiceForm: React.FC = () => {
                             onClick={() => removeFeature(index)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors dark:hover:bg-red-900/30"
                           >
-                            <X size={16} />
+                            <Icon icon="lucide:x" width={16} height={16} />
                           </button>
                         </div>
                       ))}
@@ -314,17 +307,13 @@ export const AdminServiceForm: React.FC = () => {
                           onClick={addFeature}
                           className="p-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
                         >
-                          <Plus size={16} />
+                          <Icon icon="lucide:plus" width={16} height={16} />
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
-
-
-
             </form>
           </div>
         </div>

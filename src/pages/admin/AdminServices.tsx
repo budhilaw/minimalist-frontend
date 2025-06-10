@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, EyeOff, Star, StarOff, BarChart3, DollarSign } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
 import { services, iconMap, Service } from '../../data/services';
 
@@ -62,7 +62,7 @@ export const AdminServices: React.FC = () => {
           to="/admin/services/new"
           className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
         >
-          <Plus size={16} className="mr-2" />
+          <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
           New Service
         </Link>
       </div>
@@ -72,7 +72,7 @@ export const AdminServices: React.FC = () => {
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <Icon icon="lucide:bar-chart3" className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Services</p>
@@ -84,7 +84,7 @@ export const AdminServices: React.FC = () => {
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Eye className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <Icon icon="lucide:eye" className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Active Services</p>
@@ -96,7 +96,7 @@ export const AdminServices: React.FC = () => {
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-              <Star className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              <Icon icon="lucide:star" className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Featured</p>
@@ -108,7 +108,7 @@ export const AdminServices: React.FC = () => {
         <div className="bg-[rgb(var(--color-card))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
           <div className="flex items-center">
             <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-              <EyeOff className="w-6 h-6 text-red-600 dark:text-red-400" />
+              <Icon icon="lucide:eye-off" className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Inactive</p>
@@ -124,7 +124,7 @@ export const AdminServices: React.FC = () => {
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] w-4 h-4" />
+              <Icon icon="lucide:search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[rgb(var(--color-muted-foreground))] w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search services..."
@@ -191,14 +191,14 @@ export const AdminServices: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-[rgb(var(--color-border))]">
               {filteredServices.map((service) => {
-                const IconComponent = iconMap[service.icon] || iconMap.code;
+                const iconName = iconMap[service.icon] || iconMap.code;
                 return (
                   <tr key={service.id} className="hover:bg-[rgb(var(--color-muted))]/50">
                     <td className="px-6 py-6">
                       <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">
                           <div className="w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg flex items-center justify-center">
-                            <IconComponent className="w-6 h-6 text-white" />
+                            <Icon icon={iconName} className="w-6 h-6 text-white" />
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -240,7 +240,7 @@ export const AdminServices: React.FC = () => {
                             : 'bg-red-100 text-red-800 hover:bg-red-200 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
                         }`}
                       >
-                        {service.active ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+                        {service.active ? <Icon icon="lucide:eye" className="w-3 h-3 mr-1" /> : <Icon icon="lucide:eye-off" className="w-3 h-3 mr-1" />}
                         {service.active ? 'Active' : 'Inactive'}
                       </button>
                     </td>
@@ -253,7 +253,7 @@ export const AdminServices: React.FC = () => {
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800'
                         }`}
                       >
-                        {service.featured ? <Star className="w-3 h-3 mr-1" /> : <StarOff className="w-3 h-3 mr-1" />}
+                        {service.featured ? <Icon icon="lucide:star" className="w-3 h-3 mr-1" /> : <Icon icon="lucide:star-off" className="w-3 h-3 mr-1" />}
                         {service.featured ? 'Featured' : 'Regular'}
                       </button>
                     </td>
@@ -263,14 +263,14 @@ export const AdminServices: React.FC = () => {
                           to={`/admin/services/edit/${service.id}`}
                           className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/50"
                         >
-                          <Edit className="w-4 h-4 mr-1" />
+                          <Icon icon="lucide:edit" className="w-4 h-4 mr-1" />
                           Edit
                         </Link>
                         <button
                           onClick={() => deleteService(service.id)}
                           className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/50"
                         >
-                          <Trash2 className="w-4 h-4 mr-1" />
+                          <Icon icon="lucide:trash2" className="w-4 h-4 mr-1" />
                           Delete
                         </button>
                       </div>
@@ -291,7 +291,7 @@ export const AdminServices: React.FC = () => {
               to="/admin/services/new"
               className="inline-flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
             >
-              <Plus size={16} className="mr-2" />
+              <Icon icon="lucide:plus" width={16} height={16} className="mr-2" />
               Create New Service
             </Link>
           </div>

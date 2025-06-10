@@ -1,5 +1,5 @@
 import React from 'react';
-import { Reply, ThumbsUp } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Comment, CommentFormData } from '../../types/comment';
 import { CommentForm } from './CommentForm';
 
@@ -80,14 +80,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 : 'text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))]'
             }`}
           >
-            <ThumbsUp size={14} className={comment.isLiked ? 'fill-current' : ''} />
+            <Icon icon="lucide:thumbs-up" width={14} height={14} className={comment.isLiked ? 'fill-current' : ''} />
             <span>{comment.likes}</span>
           </button>
           <button
             onClick={() => onReply(comment.id)}
             className="flex items-center space-x-1 text-sm text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
           >
-            <Reply size={14} />
+            <Icon icon="lucide:reply" width={14} height={14} />
             <span>Reply</span>
           </button>
         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, ArrowRight, Tag } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { usePublishedPosts, useFeaturedPosts } from '../hooks/useBlog';
 import { LoadingSection, ErrorMessage } from './LoadingSpinner';
 
@@ -72,7 +72,7 @@ export const Blog: React.FC = () => {
                     />
                   ) : (
                     <div className="text-center text-white">
-                      <Tag size={48} className="mx-auto mb-4 opacity-80" />
+                      <Icon icon="lucide:tag" width={48} height={48} className="mx-auto mb-4 opacity-80" />
                       <p className="text-lg font-medium">Featured Article</p>
                     </div>
                   )}
@@ -102,11 +102,11 @@ export const Blog: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 text-sm text-[rgb(var(--color-muted-foreground))]">
                       <div className="flex items-center">
-                        <Calendar size={16} className="mr-2" />
+                        <Icon icon="lucide:calendar" width={16} height={16} className="mr-2" />
                         {formatDate(post.published_at || post.created_at)}
                       </div>
                       <div className="flex items-center">
-                        <Clock size={16} className="mr-2" />
+                        <Icon icon="lucide:clock" width={16} height={16} className="mr-2" />
                         {calculateReadTime(post.content)}
                       </div>
                     </div>
@@ -116,7 +116,7 @@ export const Blog: React.FC = () => {
                        className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                      >
                        Read More
-                       <ArrowRight size={16} className="ml-2" />
+                       <Icon icon="lucide:arrow-right" width={16} height={16} className="ml-2" />
                      </Link>
                   </div>
                   
@@ -188,11 +188,11 @@ export const Blog: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4 text-sm text-[rgb(var(--color-muted-foreground))]">
                   <div className="flex items-center">
-                    <Calendar size={14} className="mr-1" />
+                    <Icon icon="lucide:calendar" width={14} height={14} className="mr-1" />
                     {formatDate(post.published_at || post.created_at)}
                   </div>
                   <div className="flex items-center">
-                    <Clock size={14} className="mr-1" />
+                    <Icon icon="lucide:clock" width={14} height={14} className="mr-1" />
                     {calculateReadTime(post.content)}
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export const Blog: React.FC = () => {
                  className="inline-flex items-center text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-primary))]/80 font-medium transition-colors duration-200"
                >
                  Read More
-                 <ArrowRight size={14} className="ml-2" />
+                 <Icon icon="lucide:arrow-right" width={14} height={14} className="ml-2" />
                </Link>
               </div>
             </article>
@@ -235,7 +235,7 @@ export const Blog: React.FC = () => {
             className="inline-flex items-center px-8 py-3 border border-[rgb(var(--color-border))] text-base font-medium rounded-md text-[rgb(var(--color-foreground))] bg-[rgb(var(--color-background))] hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
           >
             View All Posts
-            <ArrowRight size={16} className="ml-2" />
+            <Icon icon="lucide:arrow-right" width={16} height={16} className="ml-2" />
           </Link>
         </div>
       </div>

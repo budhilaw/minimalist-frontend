@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowRight, Download, Github, Linkedin, Mail } from 'lucide-react';
+import { Icon } from '@iconify/react';
+import { SocialLinks, defaultSocialLinks } from './SocialLinks';
 
 export const Hero: React.FC = () => {
   return (
@@ -47,13 +48,13 @@ export const Hero: React.FC = () => {
                     className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[rgb(var(--color-primary))] hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
                   >
                     Let's Build Something Great
-                    <ArrowRight className="ml-2 -mr-1 w-5 h-5" />
+                    <Icon icon="lucide:arrow-right" className="ml-2 -mr-1 w-5 h-5" />
                   </a>
                   <a
                     href="/Ericsson Budhilaw - CV.pdf"
                     className="inline-flex items-center justify-center px-6 py-3 border border-[rgb(var(--color-border))] text-base font-medium rounded-md text-[rgb(var(--color-foreground))] bg-transparent hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
                   >
-                    <Download className="mr-2 -ml-1 w-5 h-5" />
+                    <Icon icon="lucide:download" className="mr-2 -ml-1 w-5 h-5" />
                     Download Resume
                   </a>
                 </div>
@@ -61,28 +62,11 @@ export const Hero: React.FC = () => {
 
               {/* Social Links */}
               <div className="mt-8 flex justify-center lg:justify-start space-x-6">
-                <a
-                  href="https://github.com/budhilaw"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
-                >
-                  <Github size={24} />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/budhilaw/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
-                >
-                  <Linkedin size={24} />
-                </a>
-                <a
-                  href="mailto:ericsson@budhilaw.com"
-                  className="text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
-                >
-                  <Mail size={24} />
-                </a>
+                <SocialLinks 
+                  links={defaultSocialLinks} 
+                  size={24} 
+                  className="space-x-6" 
+                />
               </div>
             </div>
           </div>
