@@ -36,6 +36,8 @@
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
   }
   
   .tab-navigation::-webkit-scrollbar {
@@ -119,6 +121,8 @@
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
   }
   
   .rich-editor .toolbar::-webkit-scrollbar {
@@ -130,18 +134,22 @@
 @media (max-width: 640px) {
   .admin-container {
     overflow-x: hidden;
+    overscroll-behavior: none;
   }
   
   .form-container {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    overscroll-behavior: none;
   }
   
   /* Make tables responsive */
   .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
   }
   
   /* Hide less important columns on small screens */
