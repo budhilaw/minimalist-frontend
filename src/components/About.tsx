@@ -5,7 +5,7 @@ export const About: React.FC = () => {
   const workHistory = [
     {
       company: 'Paper.id',
-      position: 'Senior Full-Stack Engineer',
+      position: 'Technical Lead',
       period: '2020 - Present',
       achievements: [
         'Architected and built scalable full-stack applications handling thousands of concurrent users',
@@ -15,7 +15,7 @@ export const About: React.FC = () => {
         'Worked with cloud infrastructure on AWS and GCP for deployment and scaling',
         'Mentored junior developers and established coding standards across the organization'
       ],
-      technologies: ['ReactJS', 'VueJS', 'NextJS', 'Go', 'JavaScript', 'Rust', 'Python', 'PostgreSQL', 'Docker', 'AWS', 'GCP']
+      technologies: ['AngularJS', 'Go', 'JavaScript', 'Rust', 'MySQL', 'Docker', 'GCP']
     },
     {
       company: 'Previous Companies & Freelance',

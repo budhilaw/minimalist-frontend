@@ -10,12 +10,18 @@ interface SocialMediaLinks {
   email?: string;
 }
 
+interface FilesSettings {
+  resume_links?: string;
+}
+
 interface PublicSiteSettings {
   site_name: string;
   site_description: string;
   maintenance_mode: boolean;
   maintenance_message?: string;
+  photo_profile?: string;
   social_media_links: SocialMediaLinks;
+  files: FilesSettings;
 }
 
 interface PublicFeatureSettings {
@@ -42,13 +48,17 @@ const defaultSettings: PublicSettings = {
     site_name: 'Ericsson Budhilaw',
     site_description: 'Senior Software Engineer specializing in consulting and freelancing',
     maintenance_mode: false,
+    photo_profile: undefined,
     social_media_links: {
       github: 'https://github.com/budhilaw',
       linkedin: 'https://linkedin.com/in/budhilaw',
       x: 'https://x.com/ceritaeric',
-      facebook: 'https://facebook.com/ebudhilaw',
+      facebook: 'https://facebook.com/ceritaeric',
       instagram: 'https://instagram.com/ceritaeric',
       email: 'ericsson@budhilaw.com'
+    },
+    files: {
+      resume_links: 'https://drive.google.com/',
     },
   },
   features: {

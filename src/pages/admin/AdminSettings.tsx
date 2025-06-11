@@ -308,6 +308,71 @@ const AdminSettingsPage: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Profile & Media</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Manage your profile photo and media files
+                </p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Icon icon="lucide:user-circle" className="w-4 h-4" />
+                        <span>Profile Photo URL</span>
+                      </div>
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.general.photo_profile || ''}
+                      onChange={(e) => {
+                        const updatedSettings = {
+                          general: { ...settings.general, photo_profile: e.target.value }
+                        };
+                        setSettings({ ...settings, ...updatedSettings });
+                      }}
+                      onBlur={() => handleSaveSettings({ general: settings.general })}
+                      placeholder="https://imgur.com/your-photo.jpg (leave empty to use emoji)"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Leave empty to use the default emoji (👨‍💻) in Hero section
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Icon icon="lucide:download" className="w-4 h-4" />
+                        <span>Resume Download Link</span>
+                      </div>
+                    </label>
+                    <input
+                      type="url"
+                      value={settings.general.files?.resume_links || ''}
+                      onChange={(e) => {
+                        const updatedSettings = {
+                          general: {
+                            ...settings.general,
+                            files: {
+                              ...settings.general.files,
+                              resume_links: e.target.value
+                            }
+                          }
+                        };
+                        setSettings({ ...settings, ...updatedSettings });
+                      }}
+                      onBlur={() => handleSaveSettings({ general: settings.general })}
+                      placeholder="https://drive.google.com/your-resume-link"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      This link will be used for the "Download Resume" button in the Hero section
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

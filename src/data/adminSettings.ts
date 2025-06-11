@@ -8,12 +8,18 @@ interface SocialMediaLinks {
   email?: string;
 }
 
+interface FilesSettings {
+  resume_links?: string;
+}
+
 export interface GeneralSettings {
   siteName: string;
   siteDescription: string;
   maintenanceMode: boolean;
   maintenanceMessage: string;
+  photo_profile?: string;
   social_media_links: SocialMediaLinks;
+  files: FilesSettings;
 }
 
 export interface FeatureSettings {

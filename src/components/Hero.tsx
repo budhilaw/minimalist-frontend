@@ -8,11 +8,17 @@ export const Hero: React.FC = () => {
   const siteName = useSiteSetting('site.site_name', 'Ericsson Budhilaw');
   const siteDescription = useSiteSetting('site.site_description', 'Full-Stack Software Engineer');
   const socialMediaLinks = useSiteSetting('site.social_media_links', {}) as Record<string, string>;
+  const photoProfile = useSiteSetting('site.photo_profile', '') as string;
+  const resumeLinks = useSiteSetting('site.files.resume_links', '/Ericsson Budhilaw - CV.pdf') as string;
   
   // Convert social media links to SocialLinks format
   const socialLinks = Object.entries(socialMediaLinks)
     .filter(([_, url]) => url && typeof url === 'string' && url.trim() !== '')
     .map(([id, href]) => ({ id, href: href as string }));
+
+  // Check if photo_profile is a valid URL
+  const hasValidPhoto = photoProfile && photoProfile.trim() !== '' && 
+    (photoProfile.startsWith('http://') || photoProfile.startsWith('https://'));
 
   return (
     <section id="home" className="pt-16 min-h-screen flex items-center">
@@ -62,7 +68,7 @@ export const Hero: React.FC = () => {
                     <Icon icon="lucide:arrow-right" className="ml-2 -mr-1 w-5 h-5" />
                   </a>
                   <a
-                    href="/Ericsson Budhilaw - CV.pdf"
+                    href={resumeLinks}
                     className="inline-flex items-center justify-center px-6 py-3 border border-[rgb(var(--color-border))] text-base font-medium rounded-md text-[rgb(var(--color-foreground))] bg-transparent hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
                   >
                     <Icon icon="lucide:download" className="mr-2 -ml-1 w-5 h-5" />
@@ -88,18 +94,46 @@ export const Hero: React.FC = () => {
           <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
             <div className="relative mx-auto w-full rounded-lg lg:max-w-md">
               <div className="relative bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] rounded-lg p-1">
-                <div className="w-full h-96 bg-[rgb(var(--color-muted))] rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-32 h-32 bg-[rgb(var(--color-border))] rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-4xl text-[rgb(var(--color-muted-foreground))]">👨‍💻</span>
+                <div className="w-full h-96 bg-[rgb(var(--color-muted))] rounded-lg flex items-center justify-center overflow-hidden">
+                  {hasValidPhoto ? (
+                    <img
+                      src={photoProfile}
+                      alt={siteName}
+                      className="w-full h-full object-cover rounded-lg"
+                      onError={(e) => {
+                        // Fallback to emoji if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="text-center">
+                              <div class="w-32 h-32 bg-[rgb(var(--color-border))] rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <span class="text-4xl text-[rgb(var(--color-muted-foreground))]">👨‍💻</span>
+                              </div>
+                              <p class="text-[rgb(var(--color-muted-foreground))] text-sm">
+                                ${siteName}
+                              </p>
+                              <p class="text-[rgb(var(--color-muted-foreground))] text-xs mt-1">
+                                ${siteDescription}
+                              </p>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-32 h-32 bg-[rgb(var(--color-border))] rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-4xl text-[rgb(var(--color-muted-foreground))]">👨‍💻</span>
+                      </div>
+                      <p className="text-[rgb(var(--color-muted-foreground))] text-sm">
+                        {siteName}
+                      </p>
+                      <p className="text-[rgb(var(--color-muted-foreground))] text-xs mt-1">
+                        {siteDescription}
+                      </p>
                     </div>
-                    <p className="text-[rgb(var(--color-muted-foreground))] text-sm">
-                      {siteName}
-                    </p>
-                    <p className="text-[rgb(var(--color-muted-foreground))] text-xs mt-1">
-                      {siteDescription}
-                    </p>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
