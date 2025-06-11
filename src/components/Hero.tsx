@@ -1,8 +1,19 @@
 import React from 'react';
 import { Icon } from '@iconify/react';
-import { SocialLinks, defaultSocialLinks } from './SocialLinks';
+import { SocialLinks } from './SocialLinks';
+import { useSiteSetting } from '../contexts/SiteSettingsContext';
 
 export const Hero: React.FC = () => {
+  // Get dynamic settings
+  const siteName = useSiteSetting('site.site_name', 'Ericsson Budhilaw');
+  const siteDescription = useSiteSetting('site.site_description', 'Full-Stack Software Engineer');
+  const socialMediaLinks = useSiteSetting('site.social_media_links', {}) as Record<string, string>;
+  
+  // Convert social media links to SocialLinks format
+  const socialLinks = Object.entries(socialMediaLinks)
+    .filter(([_, url]) => url && typeof url === 'string' && url.trim() !== '')
+    .map(([id, href]) => ({ id, href: href as string }));
+
   return (
     <section id="home" className="pt-16 min-h-screen flex items-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -11,11 +22,11 @@ export const Hero: React.FC = () => {
           <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center">
             <div>
               <h1 className="text-4xl tracking-tight font-extrabold text-[rgb(var(--color-foreground))] sm:text-5xl md:text-6xl">
-                <span className="block">Ericsson</span>
-                <span className="block text-[rgb(var(--color-primary))]">Budhilaw</span>
+                <span className="block">{siteName.split(' ')[0] || 'Ericsson'}</span>
+                <span className="block text-[rgb(var(--color-primary))]">{siteName.split(' ').slice(1).join(' ') || 'Budhilaw'}</span>
               </h1>
               <p className="mt-3 text-base text-[rgb(var(--color-muted-foreground))] sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                Full-Stack Software Engineer | Delivering Excellence in End-to-End Solutions
+                {siteDescription}
               </p>
               <div className="mt-8 space-y-4 text-[rgb(var(--color-muted-foreground))]">
                 <div className="flex items-center">
@@ -62,11 +73,13 @@ export const Hero: React.FC = () => {
 
               {/* Social Links */}
               <div className="mt-8 flex justify-center lg:justify-start space-x-6">
-                <SocialLinks 
-                  links={defaultSocialLinks} 
-                  size={24} 
-                  className="space-x-6" 
-                />
+                {socialLinks.length > 0 && (
+                  <SocialLinks 
+                    links={socialLinks} 
+                    size={24} 
+                    className="space-x-6" 
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -81,10 +94,10 @@ export const Hero: React.FC = () => {
                       <span className="text-4xl text-[rgb(var(--color-muted-foreground))]">👨‍💻</span>
                     </div>
                     <p className="text-[rgb(var(--color-muted-foreground))] text-sm">
-                      Ericsson Budhilaw
+                      {siteName}
                     </p>
                     <p className="text-[rgb(var(--color-muted-foreground))] text-xs mt-1">
-                      Full-Stack Software Engineer
+                      {siteDescription}
                     </p>
                   </div>
                 </div>

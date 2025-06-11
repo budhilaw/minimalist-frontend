@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import { AdminSettings, SettingsService } from '../../data/settings';
+import { AdminSettings, AdminSettingsService } from '../../data/adminSettings';
 import { useAdminActions } from '../../contexts/NotificationContext';
 
 const AdminSettingsPage: React.FC = () => {
@@ -17,7 +17,7 @@ const AdminSettingsPage: React.FC = () => {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const settingsService = SettingsService.getInstance();
+      const settingsService = new AdminSettingsService();
       const data = await settingsService.getAllSettings();
       setSettings(data);
     } catch (error) {
@@ -32,7 +32,7 @@ const AdminSettingsPage: React.FC = () => {
     
     setSaving(true);
     try {
-      const settingsService = SettingsService.getInstance();
+      const settingsService = new AdminSettingsService();
       const updatedSettings = await settingsService.updateSettings(updates);
       setSettings(updatedSettings);
       
@@ -72,7 +72,7 @@ const AdminSettingsPage: React.FC = () => {
     
     setSaving(true);
     try {
-      const settingsService = SettingsService.getInstance();
+      const settingsService = new AdminSettingsService();
       const defaultSettings = await settingsService.resetToDefaults();
       setSettings(defaultSettings);
       
@@ -251,6 +251,62 @@ const AdminSettingsPage: React.FC = () => {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Social Media Links</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Configure your social media profiles and contact information
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(settings.general.social_media_links || {}).map(([platform, url]) => {
+                    const platformLabels: Record<string, { label: string; icon: string; placeholder: string }> = {
+                      github: { label: 'GitHub', icon: 'lucide:github', placeholder: 'https://github.com/username' },
+                      linkedin: { label: 'LinkedIn', icon: 'lucide:linkedin', placeholder: 'https://linkedin.com/in/username' },
+                      x: { label: 'X (Twitter)', icon: 'lucide:twitter', placeholder: 'https://x.com/username' },
+                      facebook: { label: 'Facebook', icon: 'lucide:facebook', placeholder: 'https://facebook.com/username' },
+                      instagram: { label: 'Instagram', icon: 'lucide:instagram', placeholder: 'https://instagram.com/username' },
+                      email: { label: 'Email', icon: 'lucide:mail', placeholder: 'your@email.com' }
+                    };
+
+                    const platformInfo = platformLabels[platform] || {
+                      label: platform.charAt(0).toUpperCase() + platform.slice(1),
+                      icon: 'lucide:link',
+                      placeholder: 'https://example.com'
+                    };
+
+                    return (
+                      <div key={platform}>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Icon icon={platformInfo.icon} className="w-4 h-4" />
+                            <span>{platformInfo.label}</span>
+                          </div>
+                        </label>
+                        <input
+                          type={platform === 'email' ? 'email' : 'url'}
+                          value={url || ''}
+                          onChange={(e) => {
+                            const updatedSettings = {
+                              general: {
+                                ...settings.general,
+                                social_media_links: {
+                                  ...settings.general.social_media_links,
+                                  [platform]: e.target.value
+                                }
+                              }
+                            };
+                            setSettings({ ...settings, ...updatedSettings });
+                          }}
+                          onBlur={() => handleSaveSettings({ general: settings.general })}
+                          placeholder={platformInfo.placeholder}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

@@ -57,30 +57,5 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
   );
 };
 
-// Default social links for the portfolio
-export const defaultSocialLinks: SocialLink[] = [
-  {
-    id: 'github',
-    href: 'https://github.com/budhilaw'
-  },
-  {
-    id: 'linkedin',
-    href: 'https://linkedin.com/in/ericssonbudhilaw'
-  },
-  {
-    id: 'x',
-    href: 'https://x.com/ericssonbudhi'
-  },
-  {
-    id: 'facebook',
-    href: 'https://facebook.com/budhilaw'
-  },
-  {
-    id: 'instagram',
-    href: 'https://instagram.com/budhilaw'
-  },
-  {
-    id: 'email',
-    href: 'mailto:ericsson@budhilaw.com'
-  }
-]; 
+// Note: Social links are now managed through admin settings
+// and fetched from the public settings API endpoint 

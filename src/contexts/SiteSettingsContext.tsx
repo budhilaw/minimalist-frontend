@@ -1,43 +1,107 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { SettingsService, GeneralSettings, FeatureSettings } from '../data/settings';
 
-interface SiteSettings {
-  general: GeneralSettings;
-  features: FeatureSettings;
+// Public settings interface (matches backend PublicSettingsResponse)
+interface SocialMediaLinks {
+  github?: string;
+  linkedin?: string;
+  x?: string;
+  facebook?: string;
+  instagram?: string;
+  email?: string;
+}
+
+interface PublicSiteSettings {
+  site_name: string;
+  site_description: string;
+  maintenance_mode: boolean;
+  maintenance_message?: string;
+  social_media_links: SocialMediaLinks;
+}
+
+interface PublicFeatureSettings {
+  portfolio_enabled: boolean;
+  services_enabled: boolean;
+  blog_enabled: boolean;
+  contact_form_enabled: boolean;
+}
+
+interface PublicSettings {
+  site: PublicSiteSettings;
+  features: PublicFeatureSettings;
 }
 
 interface SiteSettingsContextType {
-  settings: SiteSettings | null;
+  settings: PublicSettings | null;
   loading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refetch: () => void;
 }
 
-const defaultSettings: SiteSettings = {
-  general: {
-    siteName: 'Portfolio',
-    siteDescription: 'Personal portfolio and blog',
-    maintenanceMode: false,
-    maintenanceMessage: ''
+const defaultSettings: PublicSettings = {
+  site: {
+    site_name: 'Ericsson Budhilaw',
+    site_description: 'Senior Software Engineer specializing in consulting and freelancing',
+    maintenance_mode: false,
+    social_media_links: {
+      github: 'https://github.com/budhilaw',
+      linkedin: 'https://linkedin.com/in/budhilaw',
+      x: 'https://x.com/ceritaeric',
+      facebook: 'https://facebook.com/ebudhilaw',
+      instagram: 'https://instagram.com/ceritaeric',
+      email: 'ericsson@budhilaw.com'
+    },
   },
   features: {
-    commentsEnabled: true,
-    portfolioEnabled: true,
-    servicesEnabled: true,
-    blogEnabled: true,
-    contactFormEnabled: true,
-    searchEnabled: true
-  }
+    portfolio_enabled: true,
+    services_enabled: true,
+    blog_enabled: true,
+    contact_form_enabled: true,
+  },
 };
 
-const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
+const SiteSettingsContext = createContext<SiteSettingsContextType>({
+  settings: defaultSettings,
+  loading: false,
+  error: null,
+  refetch: () => {},
+});
+
+export const useSiteSettings = () => {
+  const context = useContext(SiteSettingsContext);
+  if (!context) {
+    throw new Error('useSiteSettings must be used within a SiteSettingsProvider');
+  }
+  return context;
+};
+
+export const useSiteSetting = <T,>(
+  path: string,
+  fallback: T
+): T => {
+  const { settings } = useSiteSettings();
+  
+  if (!settings) return fallback;
+  
+  try {
+    const keys = path.split('.');
+    let value: any = settings;
+    
+    for (const key of keys) {
+      value = value?.[key];
+    }
+    
+    return value !== undefined ? value : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 interface SiteSettingsProviderProps {
   children: ReactNode;
 }
 
 export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ children }) => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<PublicSettings | null>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,14 +110,23 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
       setLoading(true);
       setError(null);
       
-      const settingsService = SettingsService.getInstance();
-      const fetchedSettings = await settingsService.getPublicSettings();
+      const response = await fetch('/api/v1/settings/public');
       
-      setSettings(fetchedSettings);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: PublicSettings = await response.json();
+      setSettings(data);
+      
+      // Update document title with site name
+      if (data.site.site_name) {
+        document.title = data.site.site_name;
+      }
     } catch (err) {
-      console.warn('Failed to fetch site settings, using defaults:', err);
+      console.error('Failed to fetch site settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');
-      // Use default settings if API fails
+      // Keep using default settings on error
       setSettings(defaultSettings);
     } finally {
       setLoading(false);
@@ -64,22 +137,11 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
     fetchSettings();
   }, []);
 
-  const refresh = async () => {
-    await fetchSettings();
-  };
-
-  // Update document title when settings change
-  useEffect(() => {
-    if (settings?.general?.siteName) {
-      document.title = settings.general.siteName;
-    }
-  }, [settings?.general?.siteName]);
-
-  const value: SiteSettingsContextType = {
+  const value = {
     settings,
     loading,
     error,
-    refresh
+    refetch: fetchSettings,
   };
 
   return (
@@ -87,33 +149,4 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
       {children}
     </SiteSettingsContext.Provider>
   );
-};
-
-export const useSiteSettings = (): SiteSettingsContextType => {
-  const context = useContext(SiteSettingsContext);
-  if (context === undefined) {
-    throw new Error('useSiteSettings must be used within a SiteSettingsProvider');
-  }
-  return context;
-};
-
-// Hook to get specific setting values with fallbacks
-export const useSiteSetting = <T,>(
-  path: string,
-  fallback: T
-): T => {
-  const { settings } = useSiteSettings();
-  
-  if (!settings) return fallback;
-  
-  // Simple path resolution (e.g., 'general.siteName')
-  const pathArray = path.split('.');
-  let value: any = settings;
-  
-  for (const key of pathArray) {
-    value = value?.[key];
-    if (value === undefined) break;
-  }
-  
-  return value !== undefined ? value : fallback;
 }; 

@@ -10,7 +10,7 @@ export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { hasPortfolio, hasServices, hasPosts, loading } = useContentAvailability();
-  const siteName = useSiteSetting('general.siteName', 'Portfolio');
+  const siteName = useSiteSetting('site.site_name', 'John Doe');
 
   const handleHomeClick = () => {
     // Always scroll to top when Home is clicked
