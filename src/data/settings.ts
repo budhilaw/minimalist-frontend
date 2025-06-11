@@ -209,6 +209,21 @@ export class SettingsService {
     };
   }
 
+  // Public settings API - no authentication required
+  async getPublicSettings(): Promise<Pick<AdminSettings, 'general' | 'features'>> {
+    const response = await fetch(`${API_BASE_URL}/settings/public`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch public settings: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      general: data.general,
+      features: data.features
+    };
+  }
+
   // Legacy methods for backward compatibility
   static async getAllSettings(): Promise<AdminSettings> {
     const service = SettingsService.getInstance();

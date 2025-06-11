@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { SiteSettingsProvider } from './contexts/SiteSettingsContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { useScrollToTop } from './hooks/useScrollToTop';
@@ -57,114 +58,116 @@ function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <Router>
-        <ScrollToTopHandler />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/*" element={
-            <div className="min-h-screen w-full bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))]">
-              <Header />
-              <main>
+        <SiteSettingsProvider>
+          <Router>
+          <ScrollToTopHandler />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/*" element={
+              <div className="min-h-screen w-full bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))]">
+                <Header />
+                <main>
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/blog" element={<BlogPosts />} />
+                      <Route path="/blog/:slug" element={<BlogPost />} />
+                    </Routes>
+                  </Suspense>
+                </main>
+                <Footer />
+              </div>
+            } />
+            
+            {/* Admin Login Route (No Layout) */}
+            <Route path="/admin/login" element={
+              <Suspense fallback={<AdminLoadingFallback />}>
+                <AdminLogin />
+              </Suspense>
+            } />
+            
+            {/* Protected Admin Routes */}
+            <Route path="/admin/*" element={
+              <Suspense fallback={<AdminLoadingFallback />}>
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              </Suspense>
+            }>
+              <Route index element={
                 <Suspense fallback={<PageLoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/blog" element={<BlogPosts />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                  </Routes>
+                  <AdminDashboard />
                 </Suspense>
-              </main>
-              <Footer />
-            </div>
-          } />
-          
-          {/* Admin Login Route (No Layout) */}
-          <Route path="/admin/login" element={
-            <Suspense fallback={<AdminLoadingFallback />}>
-              <AdminLogin />
-            </Suspense>
-          } />
-          
-          {/* Protected Admin Routes */}
-          <Route path="/admin/*" element={
-            <Suspense fallback={<AdminLoadingFallback />}>
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            </Suspense>
-          }>
-            <Route index element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminDashboard />
-              </Suspense>
-            } />
-            <Route path="posts" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPosts />
-              </Suspense>
-            } />
-            <Route path="posts/new" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPostForm />
-              </Suspense>
-            } />
-            <Route path="posts/:id/edit" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPostForm />
-              </Suspense>
-            } />
-            <Route path="portfolio" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPortfolio />
-              </Suspense>
-            } />
-            <Route path="portfolio/new" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPortfolioForm />
-              </Suspense>
-            } />
-            <Route path="portfolio/:id/edit" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminPortfolioForm />
-              </Suspense>
-            } />
-            <Route path="services" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminServices />
-              </Suspense>
-            } />
-            <Route path="services/new" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminServiceForm />
-              </Suspense>
-            } />
-            <Route path="services/edit/:id" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminServiceForm />
-              </Suspense>
-            } />
-            <Route path="comments" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminComments />
-              </Suspense>
-            } />
-            <Route path="audit-logs" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminAuditLogs />
-              </Suspense>
-            } />
-            <Route path="settings" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminSettings />
-              </Suspense>
-            } />
-            <Route path="profile" element={
-              <Suspense fallback={<PageLoadingFallback />}>
-                <AdminProfile />
-              </Suspense>
-            } />
-          </Route>
-        </Routes>
-      </Router>
+              } />
+              <Route path="posts" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPosts />
+                </Suspense>
+              } />
+              <Route path="posts/new" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPostForm />
+                </Suspense>
+              } />
+              <Route path="posts/:id/edit" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPostForm />
+                </Suspense>
+              } />
+              <Route path="portfolio" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPortfolio />
+                </Suspense>
+              } />
+              <Route path="portfolio/new" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPortfolioForm />
+                </Suspense>
+              } />
+              <Route path="portfolio/:id/edit" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminPortfolioForm />
+                </Suspense>
+              } />
+              <Route path="services" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminServices />
+                </Suspense>
+              } />
+              <Route path="services/new" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminServiceForm />
+                </Suspense>
+              } />
+              <Route path="services/edit/:id" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminServiceForm />
+                </Suspense>
+              } />
+              <Route path="comments" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminComments />
+                </Suspense>
+              } />
+              <Route path="audit-logs" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminAuditLogs />
+                </Suspense>
+              } />
+              <Route path="settings" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminSettings />
+                </Suspense>
+              } />
+              <Route path="profile" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminProfile />
+                </Suspense>
+              } />
+            </Route>
+          </Routes>
+        </Router>
+        </SiteSettingsProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

@@ -3,12 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContentAvailability } from '../hooks/useContentAvailability';
+import { useSiteSetting } from '../contexts/SiteSettingsContext';
 
 export const Header: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { hasPortfolio, hasServices, hasPosts, loading } = useContentAvailability();
+  const siteName = useSiteSetting('general.siteName', 'Portfolio');
 
   const handleHomeClick = () => {
     // Always scroll to top when Home is clicked
@@ -44,7 +46,7 @@ export const Header: React.FC = () => {
               onClick={handleHomeClick}
               className="text-2xl font-bold text-[rgb(var(--color-primary))]"
             >
-              John Doe
+              {siteName}
             </Link>
           </div>
 
