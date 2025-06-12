@@ -1,4 +1,6 @@
 // Admin Settings types and service (for authenticated admin use)
+import { TokenManager, SecureTokenManager } from '../utils/security';
+
 interface SocialMediaLinks {
   github?: string;
   linkedin?: string;
@@ -58,14 +60,38 @@ export interface AdminSettings {
 
 export class AdminSettingsService {
   private baseUrl = '/api/v1/admin/settings';
+  private useSecureMode = true; // Toggle this to use httpOnly cookies vs localStorage
+
+  private getAuthHeaders(): HeadersInit {
+    if (this.useSecureMode) {
+      // In secure mode, no need to send Authorization header
+      // The httpOnly cookie will be sent automatically
+      return {
+        'Content-Type': 'application/json',
+      };
+    } else {
+      // Fallback to localStorage token
+      const token = TokenManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      };
+    }
+  }
+
+  private getFetchOptions(options: RequestInit = {}): RequestInit {
+    return {
+      ...options,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...options.headers,
+      },
+      credentials: 'include', // Important: This sends httpOnly cookies
+    };
+  }
 
   async getAllSettings(): Promise<AdminSettings> {
-    const response = await fetch(this.baseUrl, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(this.baseUrl, this.getFetchOptions());
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -75,14 +101,10 @@ export class AdminSettingsService {
   }
 
   async updateSettings(updates: Partial<AdminSettings>): Promise<AdminSettings> {
-    const response = await fetch(this.baseUrl, {
+    const response = await fetch(this.baseUrl, this.getFetchOptions({
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(updates),
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -93,14 +115,10 @@ export class AdminSettingsService {
   }
 
   async updateGeneralSettings(settings: GeneralSettings): Promise<AdminSettings> {
-    const response = await fetch(`${this.baseUrl}/general`, {
+    const response = await fetch(`${this.baseUrl}/general`, this.getFetchOptions({
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(settings),
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -111,14 +129,10 @@ export class AdminSettingsService {
   }
 
   async updateFeatureSettings(settings: FeatureSettings): Promise<AdminSettings> {
-    const response = await fetch(`${this.baseUrl}/features`, {
+    const response = await fetch(`${this.baseUrl}/features`, this.getFetchOptions({
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(settings),
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -129,14 +143,10 @@ export class AdminSettingsService {
   }
 
   async updateNotificationSettings(settings: NotificationSettings): Promise<AdminSettings> {
-    const response = await fetch(`${this.baseUrl}/notifications`, {
+    const response = await fetch(`${this.baseUrl}/notifications`, this.getFetchOptions({
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(settings),
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -147,14 +157,10 @@ export class AdminSettingsService {
   }
 
   async updateSecuritySettings(settings: SecuritySettings): Promise<AdminSettings> {
-    const response = await fetch(`${this.baseUrl}/security`, {
+    const response = await fetch(`${this.baseUrl}/security`, this.getFetchOptions({
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(settings),
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -165,13 +171,9 @@ export class AdminSettingsService {
   }
 
   async resetToDefaults(): Promise<AdminSettings> {
-    const response = await fetch(`${this.baseUrl}/reset`, {
+    const response = await fetch(`${this.baseUrl}/reset`, this.getFetchOptions({
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    }));
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -182,12 +184,7 @@ export class AdminSettingsService {
   }
 
   async isFeatureEnabled(feature: string): Promise<boolean> {
-    const response = await fetch(`${this.baseUrl}/features/${feature}/enabled`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(`${this.baseUrl}/features/${feature}/enabled`, this.getFetchOptions());
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -198,12 +195,7 @@ export class AdminSettingsService {
   }
 
   async getMaintenanceMode(): Promise<{ maintenance_mode: boolean; maintenance_message?: string }> {
-    const response = await fetch(`${this.baseUrl}/maintenance-mode`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(`${this.baseUrl}/maintenance-mode`, this.getFetchOptions());
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

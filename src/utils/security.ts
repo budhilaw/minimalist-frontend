@@ -1,6 +1,35 @@
 // Security utilities for admin dashboard
 
-// Token management
+// Secure Token Manager (works with httpOnly cookies)
+export const SecureTokenManager = {
+  // No need to store/retrieve tokens manually - they're handled by httpOnly cookies
+  // These methods are for compatibility with existing code
+  
+  setToken: (token: string): void => {
+    // In secure mode, tokens are set via httpOnly cookies by the backend
+    // This method is kept for backward compatibility but does nothing
+    console.warn('SecureTokenManager: Tokens are managed via httpOnly cookies');
+  },
+
+  getToken: (): string | null => {
+    // In secure mode, we can't access httpOnly cookies from JavaScript
+    // The browser automatically sends them with requests
+    return null; // Always return null since we can't access httpOnly cookies
+  },
+
+  clearToken: (): void => {
+    // Tokens are cleared by calling the logout endpoint which clears the cookie
+    console.warn('SecureTokenManager: Use logout endpoint to clear tokens');
+  },
+
+  isTokenValid: (): boolean => {
+    // We can't validate httpOnly cookies from JavaScript
+    // The backend validates them on each request
+    return true; // Assume valid - backend will handle validation
+  }
+};
+
+// Original Token management (for backward compatibility)
 export const TokenManager = {
   // Store token securely (httpOnly would be better in real app)
   setToken: (token: string): void => {
