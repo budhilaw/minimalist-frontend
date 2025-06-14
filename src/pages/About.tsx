@@ -2,6 +2,7 @@ import React from 'react';
 import { Icon } from '@iconify/react';
 import { useDocumentTitle, useSocialMeta, useStructuredData, generatePersonStructuredData } from '../utils/seo';
 import { useSiteSettings } from '../contexts/SiteSettingsContext';
+import { aboutData } from '../data/aboutData';
 
 export const About: React.FC = () => {
   const { settings } = useSiteSettings();
@@ -35,44 +36,12 @@ export const About: React.FC = () => {
     })
   );
 
-  const workHistory = [
-    {
-      company: 'Paper.id',
-      position: 'Technical Lead',
-      period: '2020 - Present',
-      achievements: [
-        'Architected and built scalable full-stack applications handling thousands of concurrent users',
-        'Developed responsive frontend interfaces using ReactJS, VueJS, and NextJS frameworks',
-        'Implemented high-performance APIs and database optimization strategies with 99.9% uptime',
-        'Led cross-functional teams to deliver enterprise-grade software solutions',
-        'Worked with cloud infrastructure on AWS and GCP for deployment and scaling',
-        'Mentored junior developers and established coding standards across the organization'
-      ],
-      technologies: ['AngularJS', 'Go', 'JavaScript', 'Rust', 'MySQL', 'Docker', 'GCP']
-    },
-    {
-      company: 'Previous Companies & Freelance',
-      position: 'Full-Stack & Backend Developer',
-      period: '2018 - 2020',
-      achievements: [
-        'Delivered robust full-stack web applications for diverse client portfolios',
-        'Built modern frontend interfaces with React and Vue.js ecosystem',
-        'Specialized in PHP and WordPress development for enterprise clients',
-        'Built and maintained RESTful APIs serving millions of requests monthly',
-        'Implemented DevOps practices reducing deployment time by 70%',
-        'Gained extensive experience in multiple programming languages and frameworks'
-      ],
-      technologies: ['ReactJS', 'VueJS', 'PHP', 'WordPress', 'JavaScript', 'Node.js', 'Python', 'MySQL', 'Git', 'Linux']
-    }
-  ];
-
-  const skills = {
-    'Frontend Technologies': ['ReactJS', 'VueJS', 'NextJS', 'JavaScript', 'TypeScript', 'HTML5/CSS3', 'Tailwind CSS', 'Responsive Design', 'Progressive Web Apps'],
-    'Backend Technologies': ['Go', 'JavaScript', 'Rust', 'Python', 'PHP', 'Node.js', 'Ruby', 'Express.js', 'REST APIs', 'GraphQL'],
-    'Cloud & DevOps': ['AWS', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Linux', 'Cloud Deployment', 'Monitoring', 'Infrastructure Management'],
-    'Database Systems': ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Database Design', 'Query Optimization', 'Data Modeling'],
-    'Emerging Technologies': ['Web3 Development', 'Blockchain', 'Smart Contracts', 'AI/ML Fundamentals', 'Machine Learning Pipelines']
-  };
+  // Update the position title to "Senior Software Engineer"
+  const workHistoryWithUpdatedTitle = aboutData.workHistory.map(job => 
+    job.id === 'paper-id' 
+      ? { ...job, position: 'Senior Software Engineer' }
+      : job
+  );
 
   return (
     <div className="min-h-screen w-full bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))]">
@@ -84,7 +53,7 @@ export const About: React.FC = () => {
               About Me
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-xl text-[rgb(var(--color-muted-foreground))]">
-              My journey in full-stack software engineering and what drives me to create exceptional solutions
+              {aboutData.personalInfo.tagline}
             </p>
           </div>
 
@@ -95,22 +64,9 @@ export const About: React.FC = () => {
                 My Story
               </h2>
               <div className="prose prose-lg text-[rgb(var(--color-muted-foreground))] space-y-4">
-                <p>
-                  I'm Ericsson Budhilaw, a seasoned full-stack software engineer with over 6 years of professional experience 
-                  delivering high-performance, end-to-end software solutions. Based in East Java, Indonesia, I've 
-                  built a reputation for excellence in both frontend and backend engineering, with growing experience in cloud infrastructure.
-                </p>
-                <p>
-                  My expertise spans the complete development stack - from crafting intuitive user interfaces with ReactJS, 
-                  VueJS, and NextJS on the frontend, to building robust backend systems using Go, JavaScript, Rust, Python, and PHP. 
-                  I have hands-on experience working with cloud services on AWS and GCP, continuously learning and improving my infrastructure skills.
-                </p>
-                <p>
-                  Currently expanding my horizons in emerging technologies, I'm actively building Web3 applications 
-                  and diving deep into AI engineering. My passion for continuous learning and full-stack development 
-                  drives me to stay at the forefront of technology, ensuring I deliver cutting-edge solutions that 
-                  meet modern business challenges from frontend to backend.
-                </p>
+                {aboutData.personalInfo.bio.split('\n\n').map((paragraph, index) => (
+                  <p key={index}>{paragraph.trim()}</p>
+                ))}
               </div>
 
               {/* Core Values */}
@@ -119,12 +75,7 @@ export const About: React.FC = () => {
                   Core Values & Philosophy
                 </h3>
                 <div className="space-y-3">
-                  {[
-                    'Full-stack excellence - delivering seamless end-to-end user experiences',
-                    'Performance-first approach - optimizing both frontend UX and backend efficiency',
-                    'Modern frameworks mastery - leveraging ReactJS, VueJS, and NextJS effectively',
-                    'Continuous learning - growing expertise in cloud infrastructure and emerging technologies'
-                  ].map((value, index) => (
+                  {aboutData.coreValues.map((value, index) => (
                     <div key={index} className="flex items-start">
                       <span className="w-2 h-2 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-3 flex-shrink-0"></span>
                       <span className="text-[rgb(var(--color-muted-foreground))]">{value}</span>
@@ -139,50 +90,78 @@ export const About: React.FC = () => {
               <h2 className="text-3xl font-bold text-[rgb(var(--color-foreground))] mb-6">
                 Professional Experience
               </h2>
-              <div className="space-y-8">
-                {workHistory.map((job, index) => (
-                  <div key={index} className="relative">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <div className="flex items-center justify-center w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full">
-                          <Icon icon="lucide:calendar" className="w-4 h-4 text-white" />
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-[rgb(var(--color-border))]"></div>
+                
+                <div className="space-y-8">
+                  {workHistoryWithUpdatedTitle
+                    .sort((a, b) => a.order - b.order)
+                    .map((job, index) => (
+                    <div key={job.id} className="relative">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 relative z-10">
+                          <div className="flex items-center justify-center w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full border-2 border-[rgb(var(--color-background))]">
+                            <Icon 
+                              icon={job.current ? "lucide:briefcase" : "lucide:calendar"} 
+                              className="w-4 h-4 text-white" 
+                            />
+                          </div>
+                          {job.current && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[rgb(var(--color-background))]"></div>
+                          )}
                         </div>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
-                          <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">
-                            {job.position}
-                          </h4>
-                          <p className="text-[rgb(var(--color-primary))] font-medium">{job.company}</p>
-                          <p className="text-sm text-[rgb(var(--color-muted-foreground))] mb-3">{job.period}</p>
-                          
-                          <ul className="space-y-2 mb-4">
-                            {job.achievements.map((achievement, idx) => (
-                              <li key={idx} className="text-sm text-[rgb(var(--color-muted-foreground))] flex items-start">
-                                <span className="w-1.5 h-1.5 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                                {achievement}
-                              </li>
-                            ))}
-                          </ul>
-                          
-                          <div className="flex flex-wrap gap-2">
-                            {job.technologies.map((tech, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 text-xs bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] rounded border border-[rgb(var(--color-border))]"
-                              >
-                                {tech}
-                              </span>
-                            ))}
+                        <div className="ml-6 flex-1">
+                          <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))] shadow-sm">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">
+                                  {job.position}
+                                </h4>
+                                <p className="text-[rgb(var(--color-primary))] font-medium">{job.company}</p>
+                              </div>
+                              {job.current && (
+                                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-[rgb(var(--color-muted-foreground))] mb-4 flex items-center">
+                              <Icon icon="lucide:calendar" className="w-4 h-4 mr-1" />
+                              {job.period}
+                            </p>
+                            
+                            <div className="mb-4">
+                              <h5 className="text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">Key Achievements:</h5>
+                              <ul className="space-y-2">
+                                {job.achievements.map((achievement, idx) => (
+                                  <li key={idx} className="text-sm text-[rgb(var(--color-muted-foreground))] flex items-start">
+                                    <span className="w-1.5 h-1.5 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    {achievement}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            <div>
+                              <h5 className="text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">Technologies:</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {job.technologies.map((tech, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-1 text-xs bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] rounded border border-[rgb(var(--color-border))] hover:bg-[rgb(var(--color-primary))] hover:text-white transition-colors"
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    {index < workHistory.length - 1 && (
-                      <div className="absolute left-4 top-8 w-px h-8 bg-[rgb(var(--color-border))]"></div>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -193,17 +172,22 @@ export const About: React.FC = () => {
               Technical Expertise
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.entries(skills).map(([category, skillList]) => (
+              {aboutData.skills
+                .sort((a, b) => a.order - b.order)
+                .map((skillCategory) => (
                 <div
-                  key={category}
-                  className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))]"
+                  key={skillCategory.id}
+                  className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))] hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-semibold text-[rgb(var(--color-foreground))] mb-3">{category}</h4>
+                  <h4 className="font-semibold text-[rgb(var(--color-foreground))] mb-3 flex items-center">
+                    <Icon icon="lucide:code" className="w-5 h-5 mr-2 text-[rgb(var(--color-primary))]" />
+                    {skillCategory.category}
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                    {skillList.map((skill, index) => (
+                    {skillCategory.skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] text-sm rounded-full border border-[rgb(var(--color-border))]"
+                        className="px-3 py-1 bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] text-sm rounded-full border border-[rgb(var(--color-border))] hover:bg-[rgb(var(--color-primary))] hover:text-white transition-colors"
                       >
                         {skill}
                       </span>
@@ -216,33 +200,104 @@ export const About: React.FC = () => {
 
           {/* Education & Certifications */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Education */}
             <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
               <div className="flex items-center mb-4">
-                <Icon icon="lucide:book-open" className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
+                <Icon icon="lucide:graduation-cap" className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
                 <h3 className="text-xl font-semibold text-[rgb(var(--color-foreground))]">Education</h3>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <p className="font-medium text-[rgb(var(--color-foreground))]">Bachelor of Informatics Engineering</p>
-                  <p className="text-[rgb(var(--color-muted-foreground))]">Institut Teknologi Adhi Tama Surabaya • 2019-2023</p>
-                </div>
+              <div className="space-y-4">
+                {aboutData.education.map((edu) => (
+                  <div key={edu.id}>
+                    <p className="font-medium text-[rgb(var(--color-foreground))]">{edu.degree}</p>
+                    <p className="text-[rgb(var(--color-primary))] font-medium">{edu.institution}</p>
+                    <p className="text-sm text-[rgb(var(--color-muted-foreground))] mb-2">{edu.period}</p>
+                    {edu.description && (
+                      <p className="text-sm text-[rgb(var(--color-muted-foreground))]">{edu.description}</p>
+                    )}
+                    {edu.gpa && (
+                      <p className="text-sm text-[rgb(var(--color-muted-foreground))]">GPA: {edu.gpa}</p>
+                    )}
+                    {edu.honors && edu.honors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-[rgb(var(--color-foreground))]">Honors:</p>
+                        <ul className="text-sm text-[rgb(var(--color-muted-foreground))]">
+                          {edu.honors.map((honor, index) => (
+                            <li key={index} className="flex items-center">
+                              <Icon icon="lucide:award" className="w-3 h-3 mr-1 text-[rgb(var(--color-accent))]" />
+                              {honor}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
+            {/* Certifications */}
             <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))]">
               <div className="flex items-center mb-4">
                 <Icon icon="lucide:award" className="w-6 h-6 text-[rgb(var(--color-primary))] mr-3" />
-                <h3 className="text-xl font-semibold text-[rgb(var(--color-foreground))]">Achievements</h3>
+                <h3 className="text-xl font-semibold text-[rgb(var(--color-foreground))]">Certifications</h3>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <p className="font-medium text-[rgb(var(--color-foreground))]">Technical Leadership</p>
-                  <p className="text-[rgb(var(--color-muted-foreground))]">Leading development teams and mentoring junior developers</p>
-                </div>
-                <div>
-                  <p className="font-medium text-[rgb(var(--color-foreground))]">Full-Stack Expertise</p>
-                  <p className="text-[rgb(var(--color-muted-foreground))]">6+ years of professional development experience</p>
-                </div>
+              <div className="space-y-4">
+                {aboutData.certifications.map((cert) => (
+                  <div key={cert.id} className="border-b border-[rgb(var(--color-border))] last:border-b-0 pb-3 last:pb-0">
+                    <p className="font-medium text-[rgb(var(--color-foreground))]">{cert.title}</p>
+                    <p className="text-[rgb(var(--color-primary))] font-medium">{cert.issuer}</p>
+                    <p className="text-sm text-[rgb(var(--color-muted-foreground))]">
+                      Issued: {new Date(cert.date).toLocaleDateString()}
+                      {cert.expiryDate && ` • Expires: ${new Date(cert.expiryDate).toLocaleDateString()}`}
+                    </p>
+                    {cert.credentialId && (
+                      <p className="text-xs text-[rgb(var(--color-muted-foreground))]">
+                        ID: {cert.credentialId}
+                      </p>
+                    )}
+                    {cert.url && (
+                      <a 
+                        href={cert.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-[rgb(var(--color-primary))] hover:underline inline-flex items-center mt-1"
+                      >
+                        View Certificate
+                        <Icon icon="lucide:external-link" className="w-3 h-3 ml-1" />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Contact CTA */}
+          <div className="mt-16 text-center">
+            <div className="bg-[rgb(var(--color-muted))] rounded-lg p-8 border border-[rgb(var(--color-border))]">
+              <h3 className="text-2xl font-bold text-[rgb(var(--color-foreground))] mb-4">
+                Let's Work Together
+              </h3>
+              <p className="text-[rgb(var(--color-muted-foreground))] mb-6 max-w-2xl mx-auto">
+                I'm always excited to take on new challenges and create innovative solutions. 
+                Whether you need a full-stack application, consulting, or technical leadership, let's discuss how I can help.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                  href="#contact"
+                  className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[rgb(var(--color-primary))] hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
+                >
+                  <Icon icon="lucide:mail" className="w-4 h-4 mr-2" />
+                  Start a Project
+                </a>
+                <a
+                  href={`mailto:${aboutData.personalInfo.email}`}
+                  className="inline-flex items-center justify-center px-8 py-3 border border-[rgb(var(--color-border))] text-base font-medium rounded-md text-[rgb(var(--color-foreground))] bg-transparent hover:bg-[rgb(var(--color-background))] transition-colors duration-200"
+                >
+                  <Icon icon="lucide:send" className="w-4 h-4 mr-2" />
+                  Get in Touch
+                </a>
               </div>
             </div>
           </div>

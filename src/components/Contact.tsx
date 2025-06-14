@@ -59,7 +59,7 @@ export const Contact: React.FC = () => {
             backgroundSize: '50px 50px',
             animation: 'grid-move 20s linear infinite'
           }}></div>
-        </div>
+                      </div>
 
         {/* Floating particles - Full viewport */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -75,7 +75,7 @@ export const Contact: React.FC = () => {
               }}
             ></div>
           ))}
-        </div>
+            </div>
 
         {/* Content with full width */}
         <div className="relative z-10 w-full">
@@ -106,20 +106,20 @@ export const Contact: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-400">System:</span>
                   <span>Contact Interface v2.0</span>
-                </div>
+                    </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-400">Status:</span>
                   <span className="text-green-400">● AVAILABLE FOR HIRE</span>
-                </div>
+                  </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-400">Location:</span>
                   <span>{location}</span>
-                </div>
+                      </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-400">Time:</span>
                   <span>{currentTime.toLocaleTimeString()} {timezone}</span>
-                </div>
-              </div>
+                      </div>
+                    </div>
 
               {/* Main message */}
               <div className="mb-8">
@@ -130,11 +130,11 @@ export const Contact: React.FC = () => {
                   <p>Looking to build something amazing?</p>
                   <p>Skip the forms. Let's talk directly.</p>
                   <p className="text-yellow-400">→ Email is the fastest way to reach me</p>
-                </div>
+                      </div>
                 <div className="text-green-400 mt-4">
                   └─────────────────────────────┘
-                </div>
-              </div>
+                      </div>
+                    </div>
 
               {/* Email section */}
               <div className="mb-8 bg-gray-900 border border-gray-700 rounded-lg p-4 sm:p-6">
@@ -146,9 +146,9 @@ export const Contact: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span className="text-green-400 text-xs">ONLINE</span>
-                  </div>
-                </div>
-                
+                      </div>
+                    </div>
+
                 <div className="bg-black rounded-lg p-3 sm:p-4 mb-4 border border-gray-800">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                     <span className="text-blue-300 font-mono text-sm sm:text-lg break-all">{email}</span>
@@ -253,10 +253,10 @@ export const Contact: React.FC = () => {
                   </a>
                 )}
               </div>
-            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
     </>
   );
 }; 
