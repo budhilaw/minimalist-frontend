@@ -15,6 +15,9 @@ export const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get informational message from location state (e.g., after password change)
+  const infoMessage = (location.state as any)?.message;
+
   // Redirect if already authenticated
   if (isAuthenticated) {
     const from = (location.state as any)?.from?.pathname || '/admin';
@@ -73,6 +76,26 @@ export const AdminLogin: React.FC = () => {
 
         {/* Login Form */}
         <div className="bg-[rgb(var(--color-card))] p-8 rounded-lg border border-[rgb(var(--color-border))] shadow-lg">
+          {/* Informational Message */}
+          {infoMessage && (
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-start">
+                <Icon 
+                  icon="lucide:info" 
+                  width={20} 
+                  height={20} 
+                  className="text-blue-600 dark:text-blue-400 mr-3 mt-0.5 flex-shrink-0" 
+                />
+                <div>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                    Security Notice
+                  </p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">{infoMessage}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

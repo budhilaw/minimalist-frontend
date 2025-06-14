@@ -1,19 +1,55 @@
 import React from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useSinglePost, usePublishedPosts } from '../hooks/useBlog';
 import { CommentSection } from '../components/comments';
 import { LoadingSpinner, ErrorMessage } from '../components/LoadingSpinner';
+import { formatBlogDate } from '../utils/dateFormatter';
+import { useDocumentTitle, useSocialMeta, useStructuredData, generateArticleStructuredData } from '../utils/seo';
+import { Breadcrumb, useBreadcrumbs } from '../components/Breadcrumb';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   
   // Fetch single post
   const { post, loading, error } = useSinglePost(slug);
   
   // Fetch all published posts for related posts and navigation
   const { posts: allPosts } = usePublishedPosts({ limit: 100 });
-  
+
+  // Generate breadcrumbs
+  const breadcrumbs = useBreadcrumbs(location.pathname, post?.title);
+
+  // SEO: Set document title and meta description for blog posts
+  useDocumentTitle(
+    post?.title, // This will create "Site Title | Post Title"
+    post?.excerpt // Use post excerpt as meta description
+  );
+
+  // SEO: Set social media meta tags
+  useSocialMeta({
+    title: post?.title,
+    description: post?.excerpt,
+    image: post?.featured_image,
+    url: window.location.href,
+    type: 'article'
+  });
+
+  // SEO: Add structured data for the article
+  useStructuredData(
+    post ? generateArticleStructuredData({
+      title: post.title,
+      description: post.excerpt || post.title, // Fallback to title if no excerpt
+      author: 'Ericsson Budhilaw', // You can make this dynamic
+      publishedDate: post.published_at || post.created_at,
+      modifiedDate: post.updated_at,
+      image: post.featured_image,
+      url: window.location.href
+    }) : {}
+  );
+
   // Handle loading state
   if (loading) {
     return (
@@ -54,11 +90,7 @@ export const BlogPost: React.FC = () => {
     .slice(0, 3);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatBlogDate(dateString);
   };
 
   // Find previous and next posts
@@ -69,6 +101,9 @@ export const BlogPost: React.FC = () => {
   return (
     <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb items={breadcrumbs} className="mb-6" />
+
         {/* Back to Blog */}
         <div className="mb-8">
           <Link
@@ -85,10 +120,13 @@ export const BlogPost: React.FC = () => {
           {/* Featured Image */}
           {post.featured_image && (
             <div className="mb-8 rounded-lg overflow-hidden">
-              <img 
-                src={post.featured_image} 
-                alt={post.title}
+              <OptimizedImage
+                src={post.featured_image}
+                alt={`Featured image for ${post.title}`}
+                width={800}
+                height={400}
                 className="w-full h-64 md:h-96 object-cover"
+                priority={true}
               />
             </div>
           )}

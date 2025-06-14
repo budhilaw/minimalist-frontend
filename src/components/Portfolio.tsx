@@ -52,17 +52,8 @@ export const Portfolio: React.FC = () => {
   }
 
   return (
-    <section id="portfolio" className="py-20">
+    <section id="portfolio">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-[rgb(var(--color-foreground))] sm:text-4xl">
-            Portfolio
-          </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-xl text-[rgb(var(--color-muted-foreground))]">
-            A showcase of projects I've built and contributed to over the years
-          </p>
-        </div>
 
         {/* Category Filters */}
         <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-12">

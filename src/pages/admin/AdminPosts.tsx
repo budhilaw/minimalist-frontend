@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { blogPosts } from '../../data/blogPosts';
+import { formatTableDate } from '../../utils/dateFormatter';
 
 interface PostFilters {
   search: string;
@@ -63,11 +64,7 @@ export const AdminPosts: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatTableDate(dateString);
   };
 
   const handleBulkAction = (action: string) => {

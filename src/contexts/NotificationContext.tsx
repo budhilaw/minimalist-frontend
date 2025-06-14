@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuditLog, AuditService } from '../data/auditLogs';
+import { UserNotificationService, UserNotification } from '../data/userNotifications';
 import { useAuth } from '../hooks/useAuth';
 
 export interface AppNotification {
@@ -34,33 +35,41 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const userNotificationService = new UserNotificationService();
 
-  // Only load notifications when user is authenticated
+  // Only load notifications when user is authenticated and not loading
   useEffect(() => {
+    if (loading) {
+      // Still loading authentication state, don't do anything yet
+      return;
+    }
+    
     if (!isAuthenticated) {
       setNotifications([]);
       return;
     }
 
-    // Load recent audit logs and create notifications
+    // Load notifications from backend with read status
     const loadInitialNotifications = async () => {
       try {
-        const auditLogs = await AuditService.getAllLogs();
-        const recentLogs = auditLogs.slice(0, 5); // Get 5 most recent logs
+        const response = await userNotificationService.getUserNotifications(20, 0);
         
-        const initialNotifications: AppNotification[] = recentLogs.map(log => 
-          createNotificationFromAuditLog(log)
+        const initialNotifications: AppNotification[] = response.notifications.map(notification => 
+          UserNotificationService.convertToAppNotification(notification)
         );
 
         setNotifications(initialNotifications);
       } catch (error) {
         console.error('Failed to load initial notifications:', error);
+        // Don't fallback to audit logs as they require admin authentication
+        // Just set empty notifications array
+        setNotifications([]);
       }
     };
 
     loadInitialNotifications();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loading]);
 
   // Helper function to create notification from audit log
   const createNotificationFromAuditLog = (auditLog: AuditLog): AppNotification => {
@@ -117,7 +126,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           type = 'info';
           title = 'Settings Updated';
           message = `System settings have been modified`;
-          actionUrl = `/admin/settings`;
+          // No actionUrl - remove "View Details" link for settings updates
           break;
         default:
           title = AuditService.getActionDisplayName(action);
@@ -158,18 +167,45 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   };
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    // Update local state immediately for better UX
     setNotifications(prev =>
       prev.map(notification =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
+
+    // Persist to backend
+    try {
+      const auditLogId = id.replace('notif_', ''); // Extract audit log ID
+      await userNotificationService.markNotificationRead(auditLogId);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      // Revert local state on error
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === id ? { ...notification, read: false } : notification
+        )
+      );
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // Update local state immediately for better UX
     setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
+
+    // Persist to backend
+    try {
+      await userNotificationService.markAllNotificationsRead();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      // Revert local state on error
+      setNotifications(prev =>
+        prev.map(notification => ({ ...notification, read: false }))
+      );
+    }
   };
 
   const removeNotification = (id: string) => {
@@ -210,6 +246,7 @@ export const useNotifications = (): NotificationContextType => {
 // Helper hook to create notifications from admin actions
 export const useAdminActions = () => {
   const { addNotification } = useNotifications();
+  const { user } = useAuth(); // Get current user from auth context
 
   const logAdminAction = async (actionData: {
     action: string;
@@ -222,15 +259,15 @@ export const useAdminActions = () => {
     try {
       // Create audit log
       const auditLog = await AuditService.createLog({
-        userId: 'admin_001', // In real app, get from auth context
-        userName: 'John Doe', // In real app, get from auth context
+        userId: user?.id || '', // Use actual user ID or empty string as fallback
+        userName: user?.username || user?.full_name || 'Unknown User', // Use actual username
         action: actionData.action as any,
         resourceType: actionData.resourceType as any,
         resourceId: actionData.resourceId,
         resourceTitle: actionData.resourceTitle,
         details: actionData.details,
         success: actionData.success,
-        ipAddress: '192.168.1.100', // In real app, get from request
+        ipAddress: undefined, // Let backend handle IP detection
         userAgent: navigator.userAgent
       });
 

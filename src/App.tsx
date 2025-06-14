@@ -11,9 +11,14 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 // Immediate loading for critical components
 import { Home } from './pages/Home';
 
-// Lazy load blog components
+// Lazy load all pages
+const About = React.lazy(() => import('./pages/About').then(module => ({ default: module.About })));
+const Portfolio = React.lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
+const Services = React.lazy(() => import('./pages/Services').then(module => ({ default: module.Services })));
+const Contact = React.lazy(() => import('./pages/Contact').then(module => ({ default: module.Contact })));
 const BlogPosts = React.lazy(() => import('./pages/BlogPosts').then(module => ({ default: module.BlogPosts })));
 const BlogPost = React.lazy(() => import('./pages/BlogPost').then(module => ({ default: module.BlogPost })));
+const NotFound = React.lazy(() => import('./pages/NotFound').then(module => ({ default: module.NotFound })));
 
 // Lazy load admin components
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin').then(module => ({ default: module.AdminLogin })));
@@ -24,6 +29,8 @@ const AdminPosts = React.lazy(() => import('./pages/admin/AdminPosts').then(modu
 const AdminPortfolio = React.lazy(() => import('./pages/admin/AdminPortfolio').then(module => ({ default: module.AdminPortfolio })));
 const AdminServices = React.lazy(() => import('./pages/admin/AdminServices').then(module => ({ default: module.AdminServices })));
 const AdminComments = React.lazy(() => import('./pages/admin/AdminComments').then(module => ({ default: module.AdminComments })));
+
+const AdminSEO = React.lazy(() => import('./pages/admin/AdminSEO').then(module => ({ default: module.AdminSEO })));
 const AdminProfile = React.lazy(() => import('./pages/admin/AdminProfile').then(module => ({ default: module.AdminProfile })));
 const AdminPostForm = React.lazy(() => import('./pages/admin/AdminPostForm').then(module => ({ default: module.AdminPostForm })));
 const AdminPortfolioForm = React.lazy(() => import('./pages/admin/AdminPortfolioForm').then(module => ({ default: module.AdminPortfolioForm })));
@@ -70,8 +77,13 @@ function App() {
                   <Suspense fallback={<PageLoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<Home />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/portfolio" element={<Portfolio />} />
+                      <Route path="/services" element={<Services />} />
+                      <Route path="/contact" element={<Contact />} />
                       <Route path="/blog" element={<BlogPosts />} />
                       <Route path="/blog/:slug" element={<BlogPost />} />
+                      <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
                 </main>
@@ -147,6 +159,12 @@ function App() {
               <Route path="comments" element={
                 <Suspense fallback={<PageLoadingFallback />}>
                   <AdminComments />
+                </Suspense>
+              } />
+
+              <Route path="seo" element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <AdminSEO />
                 </Suspense>
               } />
               <Route path="audit-logs" element={

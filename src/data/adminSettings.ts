@@ -17,6 +17,12 @@ interface FilesSettings {
 export interface GeneralSettings {
   siteName: string;
   siteDescription: string;
+  pageTitle: string;
+  pageDescription: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
   maintenanceMode: boolean;
   maintenanceMessage: string;
   photo_profile?: string;
@@ -40,12 +46,21 @@ export interface NotificationSettings {
   systemAlertNotifications: boolean;
 }
 
+export interface CommentRateLimitSettings {
+  enabled: boolean;
+  maxCommentsPerHour: number;
+  maxCommentsPerMinute: number;
+  minuteWindow: number;
+}
+
 export interface SecuritySettings {
   requireStrongPasswords: boolean;
   sessionTimeout: number;
   maxLoginAttempts: number;
   twoFactorEnabled: boolean;
   ipWhitelist: string[];
+  commentRateLimit: CommentRateLimitSettings;
+  commentApprovalRequired: boolean;
 }
 
 export interface AdminSettings {
@@ -58,8 +73,10 @@ export interface AdminSettings {
   updatedBy?: string;
 }
 
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
 export class AdminSettingsService {
-  private baseUrl = '/api/v1/admin/settings';
+  private baseUrl = `${API_BASE_URL}/admin/settings`;
   private useSecureMode = true; // Toggle this to use httpOnly cookies vs localStorage
 
   private getAuthHeaders(): HeadersInit {

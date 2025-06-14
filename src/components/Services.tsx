@@ -55,17 +55,8 @@ export const Services: React.FC = () => {
   };
 
   return (
-    <section id="services" className="py-20">
+    <section id="services">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-[rgb(var(--color-foreground))] sm:text-4xl">
-            Services
-          </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-xl text-[rgb(var(--color-muted-foreground))]">
-            Comprehensive full-stack development services from frontend to backend
-          </p>
-        </div>
 
         {/* Services Grid */}
         {loading ? (

@@ -70,11 +70,14 @@ export class AuditService {
     return AuditService.instance;
   }
 
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('admin_token');
+  private getFetchOptions(options: RequestInit = {}): RequestInit {
     return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...options,
+      credentials: 'include', // Include httpOnly cookies
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
     };
   }
 
@@ -124,9 +127,9 @@ export class AuditService {
       params.append('limit', filters.limit.toString());
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs?${params}`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs?${params}`, 
+      this.getFetchOptions()
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch audit logs: ${response.statusText}`);
@@ -144,9 +147,9 @@ export class AuditService {
   }
 
   async getLogById(id: string): Promise<AuditLog | null> {
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/${id}`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/${id}`, 
+      this.getFetchOptions()
+    );
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -160,23 +163,24 @@ export class AuditService {
   }
 
   async createLog(log: Omit<AuditLog, 'id' | 'timestamp'>): Promise<AuditLog> {
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({
-        user_id: log.userId || null,
-        user_name: log.userName,
-        action: log.action,
-        resource_type: log.resourceType,
-        resource_id: log.resourceId || null,
-        resource_title: log.resourceTitle || null,
-        details: log.details || null,
-        ip_address: log.ipAddress || null,
-        user_agent: log.userAgent || null,
-        success: log.success,
-        error_message: log.errorMessage || null
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs`, 
+      this.getFetchOptions({
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: log.userId || null,
+          user_name: log.userName,
+          action: log.action,
+          resource_type: log.resourceType,
+          resource_id: log.resourceId || null,
+          resource_title: log.resourceTitle || null,
+          details: log.details || null,
+          ip_address: log.ipAddress || null,
+          user_agent: log.userAgent || null,
+          success: log.success,
+          error_message: log.errorMessage || null
+        })
       })
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to create audit log: ${response.statusText}`);
@@ -187,9 +191,9 @@ export class AuditService {
   }
 
   async getRecentLogs(limit: number = 10): Promise<AuditLog[]> {
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/recent?limit=${limit}`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/recent?limit=${limit}`, 
+      this.getFetchOptions()
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch recent audit logs: ${response.statusText}`);
@@ -200,9 +204,9 @@ export class AuditService {
   }
 
   async getFailedActions(limit: number = 20): Promise<AuditLog[]> {
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/failed?limit=${limit}`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/failed?limit=${limit}`, 
+      this.getFetchOptions()
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch failed audit logs: ${response.statusText}`);
@@ -213,9 +217,9 @@ export class AuditService {
   }
 
   async getStats(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/stats`, {
-      headers: this.getAuthHeaders()
-    });
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs/stats`, 
+      this.getFetchOptions()
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch audit log stats: ${response.statusText}`);

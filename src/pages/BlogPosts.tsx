@@ -1,14 +1,28 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { usePublishedPosts } from '../hooks/useBlog';
 import { LoadingSection, ErrorMessage } from '../components/LoadingSpinner';
+import { formatBlogDate } from '../utils/dateFormatter';
+import { useDocumentTitle, useSocialMeta } from '../utils/seo';
 
 export const BlogPosts: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+  
+  // Initialize filters from URL parameters
+  useEffect(() => {
+    const tagParam = searchParams.get('tag');
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+    
+    if (tagParam) setSelectedTag(tagParam);
+    if (categoryParam) setSelectedCategory(categoryParam);
+    if (searchParam) setSearchTerm(searchParam);
+  }, [searchParams]);
   
   // Fetch published posts
   const { posts, loading, error } = usePublishedPosts({ limit: 100 }); // Get all posts for filtering
@@ -46,19 +60,52 @@ export const BlogPosts: React.FC = () => {
     });
   }, [posts, searchTerm, selectedCategory, selectedTag]);
 
+  // Update URL when filters change
+  const updateURL = (newSearchTerm: string, newCategory: string, newTag: string) => {
+    const params = new URLSearchParams();
+    if (newSearchTerm) params.set('search', newSearchTerm);
+    if (newCategory) params.set('category', newCategory);
+    if (newTag) params.set('tag', newTag);
+    
+    setSearchParams(params);
+  };
+
+  // Handler functions that update both state and URL
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    updateURL(value, selectedCategory, selectedTag);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    updateURL(searchTerm, value, selectedTag);
+  };
+
+  const handleTagChange = (value: string) => {
+    setSelectedTag(value);
+    updateURL(searchTerm, selectedCategory, value);
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatBlogDate(dateString);
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('');
     setSelectedTag('');
+    setSearchParams(new URLSearchParams());
   };
+
+  // SEO: Set page title for blog listing
+  useDocumentTitle('Blog', 'Explore articles about software engineering, web development, and technology insights.');
+
+  // SEO: Set social media meta tags for blog page
+  useSocialMeta({
+    title: 'Blog',
+    description: 'Explore articles about software engineering, web development, and technology insights.',
+    type: 'website'
+  });
 
   // Show loading state
   if (loading) {
@@ -105,7 +152,7 @@ export const BlogPosts: React.FC = () => {
                 type="text"
                 placeholder="Search posts, tags, or content..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors duration-200"
               />
             </div>
@@ -119,7 +166,7 @@ export const BlogPosts: React.FC = () => {
                 </label>
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors duration-200"
                 >
                   <option value="">All Categories</option>
@@ -136,7 +183,7 @@ export const BlogPosts: React.FC = () => {
                 </label>
                 <select
                   value={selectedTag}
-                  onChange={(e) => setSelectedTag(e.target.value)}
+                  onChange={(e) => handleTagChange(e.target.value)}
                   className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors duration-200"
                 >
                   <option value="">All Tags</option>
@@ -231,7 +278,7 @@ export const BlogPosts: React.FC = () => {
                   {post.tags.map((tag, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setSelectedTag(tag)}
+                      onClick={() => handleTagChange(tag)}
                       className="px-2 py-1 bg-[rgb(var(--color-muted))] text-[rgb(var(--color-foreground))] text-xs rounded hover:bg-[rgb(var(--color-primary))] hover:text-white transition-colors duration-200"
                     >
                       #{tag}

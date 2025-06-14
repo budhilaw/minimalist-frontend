@@ -29,6 +29,7 @@ class ApiClient {
     try {
       const url = `${this.baseURL}${endpoint}`;
       const config: RequestInit = {
+        credentials: 'include', // Include httpOnly cookies for authentication
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
@@ -39,7 +40,26 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error details from response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.errors) {
+            // Handle validation errors
+            errorMessage = Array.isArray(errorData.errors) 
+              ? errorData.errors.join(', ')
+              : errorData.errors;
+          }
+        } catch (e) {
+          // If we can't parse the error response, use the status
+          errorMessage = `HTTP error! status: ${response.status}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

@@ -1,27 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { AdminSettings, AdminSettingsService } from '../../data/adminSettings';
-import { useAdminActions } from '../../contexts/NotificationContext';
+import { formatDateTime } from '../../utils/dateFormatter';
 
 const AdminSettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'general' | 'features' | 'notifications' | 'security'>('general');
-  const { logAdminAction } = useAdminActions();
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // Clear messages after 3 seconds
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+        setErrorMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const loadSettings = async () => {
     setLoading(true);
     try {
       const settingsService = new AdminSettingsService();
       const data = await settingsService.getAllSettings();
-      setSettings(data);
+      
+      // Load page titles from localStorage if available
+      const savedPageTitles = localStorage.getItem('admin_page_titles');
+      const pageTitleFields = savedPageTitles ? JSON.parse(savedPageTitles) : {};
+      
+      // Ensure page title fields exist with fallbacks
+      const enhancedData = {
+        ...data,
+        general: {
+          ...data.general,
+          pageTitle: data.general.pageTitle || pageTitleFields.pageTitle || '',
+          pageDescription: data.general.pageDescription || pageTitleFields.pageDescription || '',
+          ogTitle: data.general.ogTitle || pageTitleFields.ogTitle || '',
+          ogDescription: data.general.ogDescription || pageTitleFields.ogDescription || '',
+          twitterTitle: data.general.twitterTitle || pageTitleFields.twitterTitle || '',
+          twitterDescription: data.general.twitterDescription || pageTitleFields.twitterDescription || ''
+        }
+      };
+      
+      console.log('📖 Loaded settings:', enhancedData);
+      console.log('💾 Page titles from localStorage:', pageTitleFields);
+      setSettings(enhancedData);
     } catch (error) {
       console.error('Failed to load settings:', error);
+      setErrorMessage('Failed to load settings');
     } finally {
       setLoading(false);
     }
@@ -31,25 +65,87 @@ const AdminSettingsPage: React.FC = () => {
     if (!settings) return;
     
     setSaving(true);
+    setErrorMessage(null);
     try {
+      console.log('🔍 Attempting to save settings:', updates);
       const settingsService = new AdminSettingsService();
-      const updatedSettings = await settingsService.updateSettings(updates);
-      setSettings(updatedSettings);
       
-      await logAdminAction({
-        action: 'settings_updated',
-        resourceType: 'settings',
-        success: true,
-        details: `Settings updated in ${activeTab} section`
-      });
+      // Temporary: Save page title fields to localStorage as backup
+      if (updates.general && (
+        updates.general.pageTitle !== undefined ||
+        updates.general.pageDescription !== undefined ||
+        updates.general.ogTitle !== undefined ||
+        updates.general.ogDescription !== undefined ||
+        updates.general.twitterTitle !== undefined ||
+        updates.general.twitterDescription !== undefined
+      )) {
+        const pageFields = {
+          pageTitle: updates.general.pageTitle,
+          pageDescription: updates.general.pageDescription,
+          ogTitle: updates.general.ogTitle,
+          ogDescription: updates.general.ogDescription,
+          twitterTitle: updates.general.twitterTitle,
+          twitterDescription: updates.general.twitterDescription
+        };
+        localStorage.setItem('admin_page_titles', JSON.stringify(pageFields));
+        console.log('💾 Saved page titles to localStorage:', pageFields);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('pageTitlesUpdated'));
+      }
+      
+      const updatedSettings = await settingsService.updateSettings(updates);
+      console.log('✅ Settings saved successfully:', updatedSettings);
+      
+      // Merge back the page titles from localStorage if backend doesn't support them
+      const mergedSettings = {
+        ...updatedSettings,
+        general: {
+          ...updatedSettings.general,
+          ...settings.general // Keep the current page title values
+        }
+      };
+      
+      setSettings(mergedSettings);
+      setSuccessMessage('Settings saved successfully');
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      await logAdminAction({
-        action: 'settings_updated',
-        resourceType: 'settings',
-        success: false,
-        details: `Failed to update settings: ${error}`
-      });
+      console.error('❌ Failed to save settings:', error);
+      
+      // If backend fails but we have page title fields, still save them locally
+      if (updates.general && (
+        updates.general.pageTitle !== undefined ||
+        updates.general.pageDescription !== undefined ||
+        updates.general.ogTitle !== undefined ||
+        updates.general.ogDescription !== undefined ||
+        updates.general.twitterTitle !== undefined ||
+        updates.general.twitterDescription !== undefined
+      )) {
+        const pageFields = {
+          pageTitle: updates.general.pageTitle,
+          pageDescription: updates.general.pageDescription,
+          ogTitle: updates.general.ogTitle,
+          ogDescription: updates.general.ogDescription,
+          twitterTitle: updates.general.twitterTitle,
+          twitterDescription: updates.general.twitterDescription
+        };
+        localStorage.setItem('admin_page_titles', JSON.stringify(pageFields));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('pageTitlesUpdated'));
+        
+        // Update local state
+        const updatedSettings = {
+          ...settings,
+          general: {
+            ...settings.general,
+            ...updates.general
+          }
+        };
+        setSettings(updatedSettings);
+        setSuccessMessage('Page titles saved locally (backend update needed)');
+      } else {
+        setErrorMessage('Failed to save settings. Please try again.');
+      }
     } finally {
       setSaving(false);
     }
@@ -71,19 +167,15 @@ const AdminSettingsPage: React.FC = () => {
     }
     
     setSaving(true);
+    setErrorMessage(null);
     try {
       const settingsService = new AdminSettingsService();
       const defaultSettings = await settingsService.resetToDefaults();
       setSettings(defaultSettings);
-      
-      await logAdminAction({
-        action: 'settings_updated',
-        resourceType: 'settings',
-        success: true,
-        details: 'All settings reset to defaults'
-      });
+      setSuccessMessage('All settings reset to defaults successfully');
     } catch (error) {
       console.error('Failed to reset settings:', error);
+      setErrorMessage('Failed to reset settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -127,7 +219,7 @@ const AdminSettingsPage: React.FC = () => {
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Last updated: {new Date(settings.updatedAt).toLocaleString()}
+            Last updated: {formatDateTime(settings?.updatedAt)}
           </span>
           <button
             onClick={handleResetSettings}
@@ -163,6 +255,25 @@ const AdminSettingsPage: React.FC = () => {
         </div>
 
         <div className="p-6">
+          {/* Success/Error Messages */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-center">
+                <Icon icon="lucide:check-circle" className="w-5 h-5 text-green-600 dark:text-green-400 mr-3" />
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-center">
+                <Icon icon="lucide:alert-circle" className="w-5 h-5 text-red-600 dark:text-red-400 mr-3" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">{errorMessage}</p>
+              </div>
+            </div>
+          )}
+
           {/* General Settings */}
           {activeTab === 'general' && (
             <div className="space-y-6">
@@ -203,6 +314,145 @@ const AdminSettingsPage: React.FC = () => {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
+                  </div>
+                </div>
+
+                {/* Page Title & SEO Section */}
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <Icon icon="lucide:type" className="w-4 h-4 mr-2" />
+                    Page Title & SEO
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Configure the main page title and SEO meta tags that appear in browser tabs and search results
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Page Title (Browser Tab)
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.general.pageTitle || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, pageTitle: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="e.g., John Doe - Senior Software Engineer | Full-Stack Development"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        This will appear in the browser tab and as the main page title
+                      </p>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Page Meta Description
+                      </label>
+                      <textarea
+                        value={settings.general.pageDescription || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, pageDescription: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="A brief description that appears in search engine results (150-160 characters recommended)"
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Used in search engine results and social media previews
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Open Graph Title (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.general.ogTitle || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, ogTitle: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="Leave empty to use Page Title"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Title for Facebook and other social platforms
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Twitter Title (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.general.twitterTitle || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, twitterTitle: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="Leave empty to use Page Title"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Title for Twitter/X platform
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Open Graph Description (Optional)
+                      </label>
+                      <textarea
+                        value={settings.general.ogDescription || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, ogDescription: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="Leave empty to use Page Description"
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Twitter Description (Optional)
+                      </label>
+                      <textarea
+                        value={settings.general.twitterDescription || ''}
+                        onChange={(e) => {
+                          const updatedSettings = {
+                            general: { ...settings.general, twitterDescription: e.target.value }
+                          };
+                          setSettings({ ...settings, ...updatedSettings });
+                        }}
+                        onBlur={() => handleSaveSettings({ general: settings.general })}
+                        placeholder="Leave empty to use Page Description"
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -627,6 +877,192 @@ const AdminSettingsPage: React.FC = () => {
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 opacity-50"></div>
                     </label>
                   </div>
+                </div>
+
+                {/* Comment Rate Limiting Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Comment Rate Limiting</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Configure rate limiting for comment submissions to prevent spam
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Enable Comment Rate Limiting
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Limit the number of comments users can submit per time period
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.security.commentRateLimit?.enabled || false}
+                        onChange={(e) => {
+                          const updates = {
+                            security: { 
+                              ...settings.security, 
+                              commentRateLimit: {
+                                ...settings.security.commentRateLimit,
+                                enabled: e.target.checked
+                              }
+                            }
+                          };
+                          handleSaveSettings(updates);
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  {settings.security.commentRateLimit?.enabled && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Max Comments per Hour
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={settings.security.commentRateLimit?.maxCommentsPerHour || 10}
+                          onChange={(e) => {
+                            const updates = {
+                              security: { 
+                                ...settings.security, 
+                                commentRateLimit: {
+                                  ...settings.security.commentRateLimit,
+                                  maxCommentsPerHour: parseInt(e.target.value) || 10
+                                }
+                              }
+                            };
+                            setSettings({ ...settings, ...updates });
+                          }}
+                          onBlur={() => handleSaveSettings({ security: settings.security })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Maximum comments allowed per hour from the same IP
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Max Comments per Minute
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={settings.security.commentRateLimit?.maxCommentsPerMinute || 2}
+                          onChange={(e) => {
+                            const updates = {
+                              security: { 
+                                ...settings.security, 
+                                commentRateLimit: {
+                                  ...settings.security.commentRateLimit,
+                                  maxCommentsPerMinute: parseInt(e.target.value) || 2
+                                }
+                              }
+                            };
+                            setSettings({ ...settings, ...updates });
+                          }}
+                          onBlur={() => handleSaveSettings({ security: settings.security })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Maximum comments allowed per minute from the same IP
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Minute Window
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={settings.security.commentRateLimit?.minuteWindow || 1}
+                          onChange={(e) => {
+                            const updates = {
+                              security: { 
+                                ...settings.security, 
+                                commentRateLimit: {
+                                  ...settings.security.commentRateLimit,
+                                  minuteWindow: parseInt(e.target.value) || 1
+                                }
+                              }
+                            };
+                            setSettings({ ...settings, ...updates });
+                          }}
+                          onBlur={() => handleSaveSettings({ security: settings.security })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Time window in minutes for rate limiting
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Comment Approval Section */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Comment Approval</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Configure whether all comments require manual approval before being published
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Require Comment Approval
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        When enabled, all comments must be manually approved before being published
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.security.commentApprovalRequired || false}
+                        onChange={(e) => {
+                          const updates = {
+                            security: { 
+                              ...settings.security, 
+                              commentApprovalRequired: e.target.checked
+                            }
+                          };
+                          handleSaveSettings(updates);
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  {settings.security.commentApprovalRequired && (
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                      <div className="flex items-start">
+                        <Icon icon="lucide:info" className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                            Comment Approval Enabled
+                          </p>
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                            All new comments will be held for moderation and must be manually approved in the Comments section before they appear on your site. This overrides any automatic approval rules.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

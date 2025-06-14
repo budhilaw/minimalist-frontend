@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
 import { blogPosts } from '../../data/blogPosts';
 import { Sanitizer, AuditLogger } from '../../utils/security';
+import { formatBlogDate, formatTableDate } from '../../utils/dateFormatter';
 
 interface PostFormData {
   title: string;
@@ -283,7 +284,7 @@ export const AdminPostForm: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Icon icon="lucide:calendar" width={16} height={16} />
-                      <span>{new Date(formData.publishDate).toLocaleDateString()}</span>
+                      <span>{formatBlogDate(formData.publishDate)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Icon icon="lucide:tag" width={16} height={16} />
@@ -797,7 +798,7 @@ export const AdminPostForm: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-[rgb(var(--color-muted-foreground))]">Last Modified:</span>
                   <span className="text-[rgb(var(--color-foreground))]">
-                    {new Date().toLocaleDateString()}
+                    {formatTableDate(new Date())}
                   </span>
                 </div>
               </div>

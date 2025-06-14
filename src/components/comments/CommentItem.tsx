@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Comment, CommentFormData } from '../../types/comment';
 import { CommentForm } from './CommentForm';
+import { formatRelativeTime } from '../../utils/dateFormatter';
 
 interface CommentItemProps {
   comment: Comment;
@@ -11,23 +12,12 @@ interface CommentItemProps {
   onSubmitReply: (parentId: string, formData: CommentFormData) => void;
   replyingTo: string | null;
   setReplyingTo: (id: string | null) => void;
+  disabled?: boolean;
 }
 
 // Utility function to format comment timestamps
 const formatCommentDate = (date: Date) => {
-  const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-  if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
-  
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  return formatRelativeTime(date);
 };
 
 export const CommentItem: React.FC<CommentItemProps> = ({
@@ -37,7 +27,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onLike,
   onSubmitReply,
   replyingTo,
-  setReplyingTo
+  setReplyingTo,
+  disabled = false
 }) => {
   const handleReplySubmit = (formData: CommentFormData) => {
     onSubmitReply(comment.id, formData);
@@ -74,18 +65,20 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         <div className="flex items-center space-x-4">
           <button
             onClick={() => onLike(comment.id)}
+            disabled={disabled}
             className={`flex items-center space-x-1 text-sm transition-colors duration-200 ${
               comment.isLiked 
                 ? 'text-[rgb(var(--color-primary))]' 
                 : 'text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))]'
-            }`}
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Icon icon="lucide:thumbs-up" width={14} height={14} className={comment.isLiked ? 'fill-current' : ''} />
             <span>{comment.likes}</span>
           </button>
           <button
             onClick={() => onReply(comment.id)}
-            className="flex items-center space-x-1 text-sm text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
+            disabled={disabled}
+            className={`flex items-center space-x-1 text-sm text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] transition-colors duration-200 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Icon icon="lucide:reply" width={14} height={14} />
             <span>Reply</span>
@@ -101,6 +94,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               placeholder="Write your reply..."
               buttonText="Reply"
               isReply={true}
+              disabled={disabled}
             />
           </div>
         )}
@@ -119,6 +113,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               onSubmitReply={onSubmitReply}
               replyingTo={replyingTo}
               setReplyingTo={setReplyingTo}
+              disabled={disabled}
             />
           ))}
         </div>

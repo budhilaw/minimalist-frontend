@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
 // Public settings interface (matches backend PublicSettingsResponse)
 interface SocialMediaLinks {
   github?: string;
@@ -17,6 +19,12 @@ interface FilesSettings {
 interface PublicSiteSettings {
   site_name: string;
   site_description: string;
+  page_title?: string;
+  page_description?: string;
+  og_title?: string;
+  og_description?: string;
+  twitter_title?: string;
+  twitter_description?: string;
   maintenance_mode: boolean;
   maintenance_message?: string;
   photo_profile?: string;
@@ -29,6 +37,7 @@ interface PublicFeatureSettings {
   services_enabled: boolean;
   blog_enabled: boolean;
   contact_form_enabled: boolean;
+  comments_enabled: boolean;
 }
 
 interface PublicSettings {
@@ -66,6 +75,7 @@ const defaultSettings: PublicSettings = {
     services_enabled: true,
     blog_enabled: true,
     contact_form_enabled: true,
+    comments_enabled: true,
   },
 };
 
@@ -120,24 +130,68 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/v1/settings/public');
+      const response = await fetch(`${API_BASE_URL}/settings/public`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data: PublicSettings = await response.json();
-      setSettings(data);
       
-      // Update document title with site name
-      if (data.site.site_name) {
-        document.title = data.site.site_name;
+      // Load page titles from localStorage if backend doesn't support them yet
+      const savedPageTitles = localStorage.getItem('admin_page_titles');
+      const pageTitleFields = savedPageTitles ? JSON.parse(savedPageTitles) : {};
+      
+      // Merge localStorage page titles with backend data
+      const enhancedData: PublicSettings = {
+        ...data,
+        site: {
+          ...data.site,
+          page_title: data.site.page_title || pageTitleFields.pageTitle || undefined,
+          page_description: data.site.page_description || pageTitleFields.pageDescription || undefined,
+          og_title: data.site.og_title || pageTitleFields.ogTitle || undefined,
+          og_description: data.site.og_description || pageTitleFields.ogDescription || undefined,
+          twitter_title: data.site.twitter_title || pageTitleFields.twitterTitle || undefined,
+          twitter_description: data.site.twitter_description || pageTitleFields.twitterDescription || undefined
+        }
+      };
+      
+      setSettings(enhancedData);
+      
+      // Update document title with configured page title or site name
+      const pageTitle = enhancedData.site.page_title || enhancedData.site.site_name;
+      if (pageTitle) {
+        document.title = pageTitle;
       }
+      
+      console.log('🔍 SiteSettings loaded with page titles:', {
+        backend: data.site,
+        localStorage: pageTitleFields,
+        final: enhancedData.site
+      });
+      
     } catch (err) {
       console.error('Failed to fetch site settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');
-      // Keep using default settings on error
-      setSettings(defaultSettings);
+      
+      // On error, still try to use localStorage page titles with default settings
+      const savedPageTitles = localStorage.getItem('admin_page_titles');
+      const pageTitleFields = savedPageTitles ? JSON.parse(savedPageTitles) : {};
+      
+      const fallbackSettings = {
+        ...defaultSettings,
+        site: {
+          ...defaultSettings.site,
+          page_title: pageTitleFields.pageTitle || undefined,
+          page_description: pageTitleFields.pageDescription || undefined,
+          og_title: pageTitleFields.ogTitle || undefined,
+          og_description: pageTitleFields.ogDescription || undefined,
+          twitter_title: pageTitleFields.twitterTitle || undefined,
+          twitter_description: pageTitleFields.twitterDescription || undefined
+        }
+      };
+      
+      setSettings(fallbackSettings);
     } finally {
       setLoading(false);
     }
@@ -145,6 +199,28 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
 
   useEffect(() => {
     fetchSettings();
+    
+    // Listen for localStorage changes (when admin saves page titles)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'admin_page_titles') {
+        console.log('📱 Page titles updated in localStorage, refreshing settings...');
+        fetchSettings();
+      }
+    };
+    
+    // Listen for custom event (for same-tab updates)
+    const handlePageTitlesUpdate = () => {
+      console.log('📱 Page titles updated via custom event, refreshing settings...');
+      fetchSettings();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('pageTitlesUpdated', handlePageTitlesUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('pageTitlesUpdated', handlePageTitlesUpdate);
+    };
   }, []);
 
   const value = {

@@ -3,6 +3,8 @@ export interface AdminUser {
   id: string;
   username: string;
   email: string;
+  full_name?: string;
+  phone?: string;
   role: 'admin' | 'super_admin';
   lastLogin: Date;
   isActive: boolean;

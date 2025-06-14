@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { usePublishedPosts, useFeaturedPosts } from '../hooks/useBlog';
 import { LoadingSection, ErrorMessage } from './LoadingSpinner';
+import { formatBlogDate } from '../utils/dateFormatter';
 
 export const Blog: React.FC = () => {
   // Fetch published posts for the regular posts section
@@ -16,11 +17,7 @@ export const Blog: React.FC = () => {
   } = useFeaturedPosts();
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatBlogDate(dateString);
   };
 
   // Helper function to calculate read time

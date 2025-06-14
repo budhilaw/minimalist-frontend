@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
+import { formatTableDate } from '../../utils/dateFormatter';
 
 export const AdminPortfolio: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -83,11 +84,7 @@ export const AdminPortfolio: React.FC = () => {
 
   // Format date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatTableDate(dateString);
   };
 
   return (

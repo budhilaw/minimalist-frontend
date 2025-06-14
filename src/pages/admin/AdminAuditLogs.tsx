@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { AuditLog, AuditService, AuditAction, ResourceType } from '../../data/auditLogs';
+import { formatAuditTimestamp } from '../../utils/dateFormatter';
 
 const AdminAuditLogs: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -121,7 +122,7 @@ const AdminAuditLogs: React.FC = () => {
   };
 
   const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+    return formatAuditTimestamp(timestamp);
   };
 
   return (

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
+import { useAuth } from '../../hooks/useAuth';
+import { formatDate } from '../../utils/dateFormatter';
 
 interface StatCard {
   title: string;
@@ -47,6 +49,7 @@ export const AdminDashboard: React.FC = () => {
       icon: <Icon icon="lucide:message-square" width={24} height={24} />,
       link: '/admin/comments'
     },
+
     {
       title: 'Page Views',
       value: '2.4K',
@@ -146,11 +149,10 @@ export const AdminDashboard: React.FC = () => {
         </p>
         <div className="flex items-center text-sm text-blue-100">
           <Icon icon="lucide:calendar" width={16} height={16} className="mr-2" />
-          <span>Last login: {new Date().toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          <span>Last login: {formatDate(new Date(), { 
+            includeTime: true,
+            dateStyle: 'full',
+            timeStyle: 'short'
           })}</span>
         </div>
       </div>

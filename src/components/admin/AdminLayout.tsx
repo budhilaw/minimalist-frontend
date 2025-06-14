@@ -63,6 +63,12 @@ export const AdminLayout: React.FC = () => {
       icon: <Icon icon="lucide:message-square" width={20} height={20} />,
       count: 8
     },
+
+    {
+      path: '/admin/seo',
+      label: 'SEO',
+      icon: <Icon icon="lucide:search" width={20} height={20} />
+    },
     {
       path: '/admin/audit-logs',
       label: 'Audit Logs',
@@ -80,9 +86,9 @@ export const AdminLayout: React.FC = () => {
     }
   ];
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
     // Mark as read
-    markAsRead(notification.id);
+    await markAsRead(notification.id);
     
     // Navigate if action exists
     if (notification.actionUrl) {
@@ -96,8 +102,8 @@ export const AdminLayout: React.FC = () => {
     setNotificationsOpen(false);
   };
 
-  const handleMarkAllAsRead = () => {
-    markAllAsRead();
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
   };
 
   const deleteNotification = (id: string) => {
@@ -170,7 +176,7 @@ export const AdminLayout: React.FC = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-[rgb(var(--color-foreground))]">
-                {user?.username}
+                {user?.full_name}
               </p>
               <p className="text-xs text-[rgb(var(--color-muted-foreground))] capitalize">
                 {user?.role}
@@ -246,12 +252,6 @@ export const AdminLayout: React.FC = () => {
 
             {/* Header Actions */}
             <div className="flex items-center space-x-4">
-              {/* Activity Indicator */}
-              <div className="flex items-center text-sm text-[rgb(var(--color-muted-foreground))]">
-                <Icon icon="lucide:activity" width={16} height={16} className="mr-2 text-green-500" />
-                <span>Online</span>
-              </div>
-
               {/* Notifications */}
               <div className="relative">
                 <button 

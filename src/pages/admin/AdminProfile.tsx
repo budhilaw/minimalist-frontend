@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useAuth } from '../../hooks/useAuth';
+import { ProfileService, UpdateProfileRequest, ChangePasswordRequest } from '../../services/profileService';
+import { useNavigate } from 'react-router-dom';
+import { formatTableDate } from '../../utils/dateFormatter';
 
 interface ProfileFormData {
   name: string;
@@ -10,27 +13,28 @@ interface ProfileFormData {
 }
 
 interface PasswordFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 export const AdminProfile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
   
   // Profile form state
   const [profileData, setProfileData] = useState<ProfileFormData>({
-    name: user?.username || '',
+    name: user?.full_name || '',
     username: user?.username || '',
     email: user?.email || '',
-    phone: ''
+    phone: user?.phone || ''
   });
 
   // Password form state
   const [passwordData, setPasswordData] = useState<PasswordFormData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
   });
 
   // UI state
@@ -44,6 +48,18 @@ export const AdminProfile: React.FC = () => {
   const [profileError, setProfileError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.full_name || '',
+        username: user.username || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
+
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -55,15 +71,66 @@ export const AdminProfile: React.FC = () => {
     if (profileError) setProfileError('');
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear success/error messages when user starts typing
-    if (passwordSuccess) setPasswordSuccess('');
-    if (passwordError) setPasswordError('');
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!passwordData.current_password || !passwordData.new_password) {
+      setPasswordError('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.new_password.length < 8) {
+      setPasswordError('New password must be at least 8 characters long');
+      return;
+    }
+
+    setIsPasswordLoading(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    try {
+      const response = await ProfileService.changePassword({
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password
+      });
+
+      if (response.error) {
+        setPasswordError(response.error);
+        return;
+      }
+
+      if (response.data) {
+        // Check if re-authentication is required
+        if (response.data.requires_reauth) {
+          // Clear user session and redirect to login with message
+          logout();
+          navigate('/admin/login', { 
+            state: { 
+              message: 'Your password has been changed successfully. Please sign in again with your new password for security.' 
+            },
+            replace: true 
+          });
+          return;
+        }
+
+        setPasswordSuccess(response.data.message);
+        setPasswordData({
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        });
+      }
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      setPasswordError(error.message || 'Failed to change password. Please try again.');
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -73,51 +140,52 @@ export const AdminProfile: React.FC = () => {
     setProfileSuccess('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const updateRequest: UpdateProfileRequest = {
+        full_name: profileData.name,
+        username: profileData.username,
+        email: profileData.email,
+        phone: profileData.phone || undefined
+      };
+
+      const response = await ProfileService.updateProfile(updateRequest);
       
-      setProfileSuccess('Profile updated successfully!');
+      if (response.error) {
+        setProfileError(response.error);
+        return;
+      }
+
+      if (response.data) {
+        setProfileSuccess(response.data.message || 'Profile updated successfully!');
+        // Update the user context with new data
+        if (updateUser) {
+          updateUser(response.data.data.user);
+        }
+      }
     } catch (error) {
+      console.error('Profile update error:', error);
       setProfileError('Failed to update profile. Please try again.');
     } finally {
       setIsProfileLoading(false);
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPasswordLoading(true);
-    setPasswordError('');
-    setPasswordSuccess('');
-
-    // Validation
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match.');
-      setIsPasswordLoading(false);
-      return;
+  const validatePasswordStrength = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long.';
     }
 
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long.');
-      setIsPasswordLoading(false);
-      return;
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasDigit = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+
+    const criteriaMet = [hasLowercase, hasUppercase, hasDigit, hasSpecial].filter(Boolean).length;
+
+    if (criteriaMet < 3) {
+      return 'Password must contain at least 3 of the following: lowercase letters, uppercase letters, numbers, and special characters (!@#$%^&*()_+-=[]{}|;:,.<>?).';
     }
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setPasswordSuccess('Password changed successfully!');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (error) {
-      setPasswordError('Failed to change password. Please try again.');
-    } finally {
-      setIsPasswordLoading(false);
-    }
+    return null;
   };
 
   return (
@@ -244,7 +312,7 @@ export const AdminProfile: React.FC = () => {
             </h2>
           </div>
 
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <form onSubmit={handlePasswordChange} className="space-y-4">
             {/* Current Password */}
             <div>
               <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
@@ -253,9 +321,9 @@ export const AdminProfile: React.FC = () => {
               <div className="relative">
                 <input
                   type={showCurrentPassword ? "text" : "password"}
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
+                  name="current_password"
+                  value={passwordData.current_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
                   className="w-full px-4 py-3 pr-12 bg-[rgb(var(--color-background))] border border-[rgb(var(--color-border))] rounded-md text-[rgb(var(--color-foreground))] placeholder-[rgb(var(--color-muted-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors"
                   placeholder="Enter current password"
                   required
@@ -278,9 +346,9 @@ export const AdminProfile: React.FC = () => {
               <div className="relative">
                 <input
                   type={showNewPassword ? "text" : "password"}
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
+                  name="new_password"
+                  value={passwordData.new_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
                   className="w-full px-4 py-3 pr-12 bg-[rgb(var(--color-background))] border border-[rgb(var(--color-border))] rounded-md text-[rgb(var(--color-foreground))] placeholder-[rgb(var(--color-muted-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors"
                   placeholder="Enter new password"
                   required
@@ -294,7 +362,7 @@ export const AdminProfile: React.FC = () => {
                 </button>
               </div>
               <p className="text-xs text-[rgb(var(--color-muted-foreground))] mt-1">
-                Password must be at least 8 characters long
+                Password must be at least 8 characters and contain at least 3 of: lowercase, uppercase, numbers, special characters
               </p>
             </div>
 
@@ -306,9 +374,9 @@ export const AdminProfile: React.FC = () => {
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
+                  name="confirm_password"
+                  value={passwordData.confirm_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
                   className="w-full px-4 py-3 pr-12 bg-[rgb(var(--color-background))] border border-[rgb(var(--color-border))] rounded-md text-[rgb(var(--color-foreground))] placeholder-[rgb(var(--color-muted-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent transition-colors"
                   placeholder="Confirm new password"
                   required
@@ -368,7 +436,7 @@ export const AdminProfile: React.FC = () => {
           <div>
             <span className="text-sm font-medium text-[rgb(var(--color-muted-foreground))]">Last Login:</span>
             <p className="text-[rgb(var(--color-foreground))]">
-              {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Today'}
+              {user?.lastLogin ? formatTableDate(user.lastLogin) : 'Today'}
             </p>
           </div>
           <div>

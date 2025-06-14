@@ -16,6 +16,28 @@ interface SocialLinksProps {
   direction?: 'horizontal' | 'vertical';
 }
 
+// Helper function to detect if a string is an email address
+const isEmailAddress = (str: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(str);
+};
+
+// Helper function to format the href for emails
+const formatHref = (href: string): string => {
+  // If it's already a mailto: link, return as is
+  if (href.startsWith('mailto:')) {
+    return href;
+  }
+  
+  // If it's an email address, add mailto: prefix
+  if (isEmailAddress(href)) {
+    return `mailto:${href}`;
+  }
+  
+  // For other links, return as is
+  return href;
+};
+
 export const SocialLinks: React.FC<SocialLinksProps> = ({
   links,
   size = 20,
@@ -34,12 +56,15 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
     <div className={containerClasses}>
       {links.map((link) => {
         const socialIcon = getSocialIcon(link.id);
+        const formattedHref = formatHref(link.href);
+        const isMailto = formattedHref.startsWith('mailto:');
+        
         return (
           <a
             key={link.id}
-            href={link.href}
-            target={link.href.startsWith('mailto:') ? '_self' : '_blank'}
-            rel={link.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+            href={formattedHref}
+            target={isMailto ? '_self' : '_blank'}
+            rel={isMailto ? undefined : 'noopener noreferrer'}
             className={`${defaultLinkClasses} ${linkClassName} ${showLabels ? 'flex items-center' : ''}`}
             aria-label={socialIcon.ariaLabel}
             title={socialIcon.platform}

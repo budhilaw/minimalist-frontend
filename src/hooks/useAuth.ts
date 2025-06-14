@@ -14,55 +14,166 @@ export const useAuth = () => {
     error: null
   });
 
-  // Initialize auth state from stored token
+  // Cross-tab synchronization using storage events
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      // Handle logout from another tab
+      if (e.key === 'admin_user' && e.newValue === null && e.oldValue !== null) {
+        // User was logged out in another tab
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null
+        });
+        return;
+      }
+
+      // Handle login from another tab
+      if (e.key === 'admin_user' && e.newValue !== null && e.oldValue === null) {
+        try {
+          const user = JSON.parse(e.newValue);
+          if (SessionManager.isSessionValid()) {
+            setAuthState({
+              user,
+              token: 'httpOnly',
+              isAuthenticated: true,
+              loading: false,
+              error: null
+            });
+          }
+        } catch (error) {
+          console.error('Failed to parse user data from storage event:', error);
+        }
+        return;
+      }
+
+      // Handle session invalidation
+      if (e.key === 'admin_session_id' && e.newValue === null && e.oldValue !== null) {
+        // Session was ended in another tab
+        setAuthState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null
+        });
+        return;
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Initialize auth state from httpOnly cookies
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = TokenManager.getToken();
+        // Check if we have a stored user (for session restoration)
+        const storedUser = localStorage.getItem('admin_user');
         
-        if (token && SessionManager.isSessionValid()) {
-          // Verify token with backend
+        if (storedUser && SessionManager.isSessionValid()) {
+          // Parse stored user first
+          let user: AdminUser;
+          try {
+            const userData = JSON.parse(storedUser);
+            user = {
+              id: userData.id,
+              username: userData.username,
+              email: userData.email,
+              full_name: userData.full_name,
+              phone: userData.phone,
+              role: userData.role as 'admin' | 'super_admin',
+              lastLogin: new Date(userData.lastLogin || Date.now()),
+              isActive: userData.isActive
+            };
+          } catch (parseError) {
+            console.error('Failed to parse stored user data:', parseError);
+            localStorage.removeItem('admin_user');
+            SessionManager.endSession();
+            setAuthState(prev => ({ ...prev, loading: false }));
+            return;
+          }
+
+          // Try to verify session with backend using httpOnly cookies
+          // But don't clear localStorage if this fails - it might be a network issue
           try {
             const response = await fetch(`${API_BASE_URL}/auth/me`, {
+              method: 'GET',
+              credentials: 'include', // Include httpOnly cookies
               headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               }
             });
 
             if (response.ok) {
               const data = await response.json();
-              const user: AdminUser = {
+              const backendUser: AdminUser = {
                 id: data.data.user.id,
                 username: data.data.user.username,
                 email: data.data.user.email,
+                full_name: data.data.user.full_name,
+                phone: data.data.user.phone,
                 role: data.data.user.role as 'admin' | 'super_admin',
                 lastLogin: new Date(data.data.user.last_login || Date.now()),
                 isActive: data.data.user.is_active
               };
 
               setAuthState({
-                user,
-                token,
+                user: backendUser,
+                token: 'httpOnly', // Placeholder since we can't access the actual token
                 isAuthenticated: true,
                 loading: false,
                 error: null
               });
               
+              // Update stored user data with fresh data from backend
+              localStorage.setItem('admin_user', JSON.stringify(backendUser));
+              
               // Log successful session restoration
-              AuditLogger.log('SESSION_RESTORED', { userId: user.id });
+              AuditLogger.log('SESSION_RESTORED', { userId: backendUser.id });
+              return;
+            } else if (response.status === 401 || response.status === 403) {
+              // Only clear localStorage if we get a definitive authentication error
+              console.log('Session verification failed with auth error:', response.status);
+              localStorage.removeItem('admin_user');
+              SessionManager.endSession();
+              setAuthState(prev => ({ ...prev, loading: false }));
+              return;
+            } else {
+              // For other errors (network, server errors), assume user is still logged in
+              // but we can't verify right now
+              console.warn('Session verification failed with non-auth error:', response.status);
+              setAuthState({
+                user,
+                token: 'httpOnly',
+                isAuthenticated: true,
+                loading: false,
+                error: null
+              });
               return;
             }
           } catch (error) {
-            // Token verification failed - this is expected for expired tokens
+            // Network error or other issues - don't clear localStorage
+            // Assume user is still logged in but we can't verify right now
+            console.warn('Session verification failed due to network error:', error);
+            setAuthState({
+              user,
+              token: 'httpOnly',
+              isAuthenticated: true,
+              loading: false,
+              error: null
+            });
+            return;
           }
         }
 
-        // Clear invalid session
-        TokenManager.clearToken();
-        SessionManager.endSession();
+        // No stored user or session is invalid
         setAuthState(prev => ({ ...prev, loading: false }));
       } catch (error) {
+        console.error('Authentication initialization failed:', error);
         setAuthState(prev => ({ ...prev, loading: false, error: 'Authentication initialization failed' }));
       }
     };
@@ -80,6 +191,7 @@ export const useAuth = () => {
       // Call backend login API (backend now handles rate limiting)
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
+        credentials: 'include', // Include cookies for httpOnly token storage
         headers: {
           'Content-Type': 'application/json'
         },
@@ -88,27 +200,28 @@ export const useAuth = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const { token, user: userData, expires_at } = data.data;
+        const { user: userData } = data.data;
 
         // Create user object
         const user: AdminUser = {
           id: userData.id,
           username: userData.username,
           email: userData.email,
+          full_name: userData.full_name,
+          phone: userData.phone,
           role: userData.role as 'admin' | 'super_admin',
           lastLogin: new Date(userData.last_login || Date.now()),
           isActive: userData.is_active
         };
 
-        // Store authentication data
-        TokenManager.setToken(token);
+        // Store user data (token is now in httpOnly cookie)
         localStorage.setItem('admin_user', JSON.stringify(user));
         SessionManager.startSession();
 
         // Update state
         setAuthState({
           user,
-          token,
+          token: 'httpOnly', // Placeholder since we can't access the actual token
           isAuthenticated: true,
           loading: false,
           error: null
@@ -174,25 +287,21 @@ export const useAuth = () => {
   // Logout function using backend API
   const logout = useCallback(async () => {
     const userId = authState.user?.id;
-    const token = authState.token;
 
     try {
-      // Call backend logout API
-      if (token) {
+      // Call backend logout API (httpOnly cookies will be cleared by backend)
         await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
+        credentials: 'include', // Include httpOnly cookies
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }).catch(err => {/* Logout API call failed - not critical */});
-      }
     } catch (error) {
       // Logout error - not critical, continue with local cleanup
     }
 
-    // Clear all authentication data
-    TokenManager.clearToken();
+    // Clear all local authentication data
     SessionManager.endSession();
     localStorage.removeItem('admin_user');
 
@@ -209,7 +318,7 @@ export const useAuth = () => {
     if (userId) {
       AuditLogger.log('LOGOUT', { userId });
     }
-  }, [authState.user?.id, authState.token]);
+  }, [authState.user?.id]);
 
   // Check if current user has required role
   const hasRole = useCallback((requiredRole: 'admin' | 'super_admin'): boolean => {
@@ -224,39 +333,67 @@ export const useAuth = () => {
 
   // Validate session
   const validateSession = useCallback(async (): Promise<boolean> => {
-    if (!authState.isAuthenticated || !authState.token) return false;
+    if (!authState.isAuthenticated) return false;
     
-    if (!TokenManager.isTokenValid() || !SessionManager.isSessionValid()) {
+    if (!SessionManager.isSessionValid()) {
       await logout();
       return false;
     }
 
     try {
-      // Verify token with backend
+      // Verify session with backend using httpOnly cookies
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        credentials: 'include', // Include httpOnly cookies
         headers: {
-          'Authorization': `Bearer ${authState.token}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
-        await logout();
+        // Only logout if we're sure the session is invalid
+        // Don't logout on network errors or temporary issues
+        if (response.status === 401 || response.status === 403) {
+          await logout();
+        }
         return false;
       }
     } catch (error) {
-      await logout();
+      // Network error - don't logout, just return false
+      console.warn('Session validation failed due to network error:', error);
       return false;
     }
     
     // Update activity
     SessionManager.updateActivity();
     return true;
-  }, [authState.isAuthenticated, authState.token, logout]);
+  }, [authState.isAuthenticated, logout]);
 
   // Clear error
   const clearError = useCallback(() => {
     setAuthState(prev => ({ ...prev, error: null }));
+  }, []);
+
+  // Update user data
+  const updateUser = useCallback((updatedUser: any) => {
+    const user: AdminUser = {
+      id: updatedUser.id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      full_name: updatedUser.full_name,
+      phone: updatedUser.phone,
+      role: updatedUser.role as 'admin' | 'super_admin',
+      lastLogin: new Date(updatedUser.last_login || Date.now()),
+      isActive: updatedUser.is_active
+    };
+
+    setAuthState(prev => ({
+      ...prev,
+      user
+    }));
+
+    // Update stored user data
+    localStorage.setItem('admin_user', JSON.stringify(user));
   }, []);
 
   return {
@@ -265,6 +402,7 @@ export const useAuth = () => {
     logout,
     hasRole,
     validateSession,
-    clearError
+    clearError,
+    updateUser
   };
 }; 
