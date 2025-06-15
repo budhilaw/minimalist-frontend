@@ -19,22 +19,15 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage - serve with simple http server
+# Production stage - serve with nginx
 FROM nginx:alpine
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Basic nginx config for serving static files
-RUN echo 'server { \
-    listen 80; \
-    server_name _; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy nginx configuration
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # Create nginx user and set permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
