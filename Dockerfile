@@ -1,7 +1,11 @@
 # Multi-stage build for React portfolio
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+
+# Accept build argument for API URL
+ARG VITE_API_BASE_URL=https://budhilaw.com/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files
 COPY package*.json ./
