@@ -2,21 +2,37 @@ name: Build and Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   pull_request:
-    branches: [main]
+    branches: [ main, master ]
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - master
+          - develop
+          - staging
       environment:
         description: 'Environment to deploy to'
-        required: false
+        required: true
         default: 'production'
         type: choice
         options:
           - production
           - staging
+          - development
       force_rebuild:
         description: 'Force rebuild without cache'
+        required: false
+        default: false
+        type: boolean
+      skip_tests:
+        description: 'Skip build tests'
         required: false
         default: false
         type: boolean
@@ -27,61 +43,35 @@ env:
 
 jobs:
   build:
-    name: Build and Test
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run linting
-      run: npm run lint --if-present
-
-    - name: Run type check
-      run: npm run type-check --if-present
-
-    - name: Run tests
-      run: npm run test --if-present
-
-    - name: Build project
-      run: npm run build
-      env:
-        CI: true
-        NODE_ENV: production
-        VITE_API_BASE_URL: https://budhilaw.com/api/v1
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-files
-        path: dist/
-        retention-days: 1
-
-  docker:
-    name: Build and Push Docker Image
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.branch || github.ref }}
+
+    - name: Setup Node.js
+      if: ${{ !github.event.inputs.skip_tests }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      if: ${{ !github.event.inputs.skip_tests }}
+      run: npm ci
+
+    - name: Run tests
+      if: ${{ !github.event.inputs.skip_tests }}
+      run: npm test -- --coverage --watchAll=false
+
+    - name: Build application
+      if: ${{ !github.event.inputs.skip_tests }}
+      run: npm run build
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3
@@ -100,6 +90,7 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=${{ github.event.inputs.environment || 'latest' }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -108,60 +99,103 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          VITE_API_BASE_URL=https://budhilaw.com/api/v1
+        no-cache: ${{ github.event.inputs.force_rebuild == 'true' }}
 
   deploy:
-    name: Deploy to Production
-    needs: [build, docker]
+    needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-
+    if: |
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    
     steps:
-    - name: Deploy to VPS
+    - name: Set deployment target
+      id: target
+      run: |
+        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
+          echo "host=${{ secrets.STAGING_HOST || secrets.HOST }}" >> $GITHUB_OUTPUT
+          echo "user=${{ secrets.STAGING_USERNAME || secrets.USERNAME }}" >> $GITHUB_OUTPUT
+          echo "port=${{ secrets.STAGING_SSH_PORT || secrets.SSH_PORT }}" >> $GITHUB_OUTPUT
+          echo "container_name=portfolio-frontend-staging" >> $GITHUB_OUTPUT
+        else
+          echo "host=${{ secrets.HOST }}" >> $GITHUB_OUTPUT
+          echo "user=${{ secrets.USERNAME }}" >> $GITHUB_OUTPUT
+          echo "port=${{ secrets.SSH_PORT }}" >> $GITHUB_OUTPUT
+          echo "container_name=portfolio-frontend" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy to ${{ github.event.inputs.environment || 'production' }}
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_SSH_PORT }}
+        host: ${{ steps.target.outputs.host }}
+        username: ${{ steps.target.outputs.user }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ steps.target.outputs.port }}
         script: |
-          # Pull the latest image
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # Set non-interactive mode for Docker
+          export DOCKER_CLI_HINTS=false
+          export DOCKER_BUILDKIT=1
+          
+          # Explicitly logout from all registries to avoid conflicts
+          echo "Clearing any existing Docker logins..."
+          docker logout || true
+          docker logout ghcr.io || true
+          docker logout docker.io || true
+          
+          # Determine image tag
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            IMAGE_TAG="${{ github.event.inputs.environment || 'latest' }}"
+          else
+            IMAGE_TAG="latest"
+          fi
+          
+          # Login to GHCR explicitly
+          echo "Logging into GHCR..."
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Pull the latest image with timeout
+          echo "Pulling image from GHCR: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
+          timeout 300 docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
           
           # Stop and remove existing container
-          docker stop portfolio-frontend || true
-          docker rm portfolio-frontend || true
+          docker stop ${{ steps.target.outputs.container_name }} || true
+          docker rm ${{ steps.target.outputs.container_name }} || true
           
           # Create network if it doesn't exist
           docker network create portfolio-network || true
           
           # Run new container
           docker run -d \
-            --name portfolio-frontend \
+            --name ${{ steps.target.outputs.container_name }} \
             --restart unless-stopped \
-            --expose 80 \
             --network portfolio-network \
-            -e NODE_ENV=production \
-            -e VITE_API_BASE_URL=https://budhilaw.com/api/v1 \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          
+          # Verify container is running
+          echo "Verifying container status..."
+          docker ps | grep ${{ steps.target.outputs.container_name }} || echo "Container not found in running state"
+          docker logs ${{ steps.target.outputs.container_name }} --tail 10 || echo "Could not get container logs"
           
           # Clean up old images
           docker image prune -f
+          
+          # Logout from GHCR
+          docker logout ghcr.io
 
   notify:
-    name: Notify Deployment Status
-    needs: [build, docker, deploy]
+    needs: [build, deploy]
     runs-on: ubuntu-latest
-    if: always() && github.ref == 'refs/heads/main'
-
+    if: always()
+    
     steps:
-    - name: Notify Success
-      if: needs.deploy.result == 'success'
+    - name: Notify deployment result
       run: |
-        echo "✅ Frontend deployment successful!"
-
-    - name: Notify Failure
-      if: needs.deploy.result == 'failure'
-      run: |
-        echo "❌ Frontend deployment failed!" 
+        if [ "${{ needs.deploy.result }}" = "success" ]; then
+          echo "✅ Frontend deployment to ${{ github.event.inputs.environment || 'production' }} successful!"
+          echo "Branch: ${{ github.event.inputs.branch || github.ref_name }}"
+          echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+        else
+          echo "❌ Frontend deployment failed!"
+          echo "Branch: ${{ github.event.inputs.branch || github.ref_name }}"
+          echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+        fi 
