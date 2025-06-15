@@ -16,16 +16,6 @@ on:
           - main
           - master
           - develop
-          - staging
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
-          - development
       force_rebuild:
         description: 'Force rebuild without cache'
         required: false
@@ -86,7 +76,6 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=${{ github.event.inputs.environment || 'latest' }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -102,31 +91,16 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+      (github.event_name == 'workflow_dispatch')
     
     steps:
-    - name: Set deployment target
-      id: target
-      run: |
-        if [ "${{ github.event.inputs.environment }}" = "staging" ]; then
-          echo "host=${{ secrets.STAGING_HOST || secrets.HOST }}" >> $GITHUB_OUTPUT
-          echo "user=${{ secrets.STAGING_USERNAME || secrets.USERNAME }}" >> $GITHUB_OUTPUT
-          echo "port=${{ secrets.STAGING_SSH_PORT || secrets.SSH_PORT }}" >> $GITHUB_OUTPUT
-          echo "container_name=portfolio-frontend-staging" >> $GITHUB_OUTPUT
-        else
-          echo "host=${{ secrets.HOST }}" >> $GITHUB_OUTPUT
-          echo "user=${{ secrets.USERNAME }}" >> $GITHUB_OUTPUT
-          echo "port=${{ secrets.SSH_PORT }}" >> $GITHUB_OUTPUT
-          echo "container_name=portfolio-frontend" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    - name: Deploy to production
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ steps.target.outputs.host }}
-        username: ${{ steps.target.outputs.user }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ steps.target.outputs.port }}
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_SSH_PORT }}
         script: |
           # Set non-interactive mode for Docker
           export DOCKER_CLI_HINTS=false
@@ -138,12 +112,8 @@ jobs:
           docker logout ghcr.io || true
           docker logout docker.io || true
           
-          # Determine image tag
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            IMAGE_TAG="${{ github.event.inputs.environment || 'latest' }}"
-          else
-            IMAGE_TAG="latest"
-          fi
+          # Use latest tag for all deployments
+          IMAGE_TAG="latest"
           
           # Login to GHCR explicitly
           echo "Logging into GHCR..."
@@ -154,23 +124,23 @@ jobs:
           timeout 300 docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
           
           # Stop and remove existing container
-          docker stop ${{ steps.target.outputs.container_name }} || true
-          docker rm ${{ steps.target.outputs.container_name }} || true
+          docker stop portfolio-frontend || true
+          docker rm portfolio-frontend || true
           
           # Create network if it doesn't exist
           docker network create portfolio-network || true
           
           # Run new container
           docker run -d \
-            --name ${{ steps.target.outputs.container_name }} \
+            --name portfolio-frontend \
             --restart unless-stopped \
             --network portfolio-network \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
           
           # Verify container is running
           echo "Verifying container status..."
-          docker ps | grep ${{ steps.target.outputs.container_name }} || echo "Container not found in running state"
-          docker logs ${{ steps.target.outputs.container_name }} --tail 10 || echo "Could not get container logs"
+          docker ps | grep portfolio-frontend || echo "Container not found in running state"
+          docker logs portfolio-frontend --tail 10 || echo "Could not get container logs"
           
           # Clean up old images
           docker image prune -f
@@ -187,11 +157,9 @@ jobs:
     - name: Notify deployment result
       run: |
         if [ "${{ needs.deploy.result }}" = "success" ]; then
-          echo "✅ Frontend deployment to ${{ github.event.inputs.environment || 'production' }} successful!"
+          echo "✅ Frontend deployment to production successful!"
           echo "Branch: ${{ github.event.inputs.branch || github.ref_name }}"
-          echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
         else
           echo "❌ Frontend deployment failed!"
           echo "Branch: ${{ github.event.inputs.branch || github.ref_name }}"
-          echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
         fi 
