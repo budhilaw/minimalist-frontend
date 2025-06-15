@@ -4,12 +4,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { Icon } from '@iconify/react';
 import { AuditLogger } from '../../utils/security';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useAdminStats } from '../../hooks/useAdminStats';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ReactNode;
   count?: number;
+  children?: NavItem[];
 }
 
 interface Notification {
@@ -31,7 +33,9 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications();
+  const { totalPosts, totalComments, totalPortfolios, totalServices } = useAdminStats();
 
   const navItems: NavItem[] = [
     {
@@ -41,48 +45,56 @@ export const AdminLayout: React.FC = () => {
     },
     {
       path: '/admin/posts',
-      label: 'Blog Posts',
+      label: 'Posts',
       icon: <Icon icon="lucide:file-text" width={20} height={20} />,
-      count: 12 // This would come from API
+      children: [
+        {
+          path: '/admin/posts',
+          label: 'Manage Posts',
+          icon: <Icon icon="lucide:file-edit" width={16} height={16} />,
+          count: totalPosts
+        },
+        {
+          path: '/admin/comments',
+          label: 'Manage Comments',
+          icon: <Icon icon="lucide:message-square" width={16} height={16} />,
+          count: totalComments
+        }
+      ]
     },
     {
       path: '/admin/portfolio',
-      label: 'Portfolio',
+      label: 'Portfolios',
       icon: <Icon icon="lucide:briefcase" width={20} height={20} />,
-      count: 6
+      count: totalPortfolios
     },
     {
       path: '/admin/services',
       label: 'Services',
       icon: <Icon icon="lucide:cog" width={20} height={20} />,
-      count: 4
-    },
-    {
-      path: '/admin/comments',
-      label: 'Comments',
-      icon: <Icon icon="lucide:message-square" width={20} height={20} />,
-      count: 8
-    },
-
-    {
-      path: '/admin/seo',
-      label: 'SEO',
-      icon: <Icon icon="lucide:search" width={20} height={20} />
-    },
-    {
-      path: '/admin/audit-logs',
-      label: 'Audit Logs',
-      icon: <Icon icon="lucide:scroll-text" width={20} height={20} />
+      count: totalServices
     },
     {
       path: '/admin/settings',
       label: 'Settings',
-      icon: <Icon icon="lucide:settings" width={20} height={20} />
+      icon: <Icon icon="lucide:settings" width={20} height={20} />,
+      children: [
+        {
+          path: '/admin/audit-logs',
+          label: 'Audit Logs',
+          icon: <Icon icon="lucide:scroll-text" width={16} height={16} />
+    },
+    {
+      path: '/admin/settings',
+          label: 'Manage Site',
+          icon: <Icon icon="lucide:globe" width={16} height={16} />
     },
     {
       path: '/admin/profile',
-      label: 'Profile',
-      icon: <Icon icon="lucide:user" width={20} height={20} />
+          label: 'Manage Profile',
+          icon: <Icon icon="lucide:user" width={16} height={16} />
+        }
+      ]
     }
   ];
 
@@ -136,6 +148,32 @@ export const AdminLayout: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
+  const toggleMenu = (path: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(path) 
+        ? prev.filter(p => p !== path)
+        : [...prev, path]
+    );
+  };
+
+  const isMenuExpanded = (path: string) => {
+    return expandedMenus.includes(path);
+  };
+
+  const hasActiveChild = (item: NavItem) => {
+    if (!item.children) return false;
+    return item.children.some(child => isActiveRoute(child.path));
+  };
+
+  // Auto-expand menus with active children
+  React.useEffect(() => {
+    navItems.forEach(item => {
+      if (item.children && hasActiveChild(item) && !isMenuExpanded(item.path)) {
+        setExpandedMenus(prev => [...prev, item.path]);
+      }
+    });
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-[rgb(var(--color-background))]">
       {/* Mobile sidebar overlay */}
@@ -186,10 +224,78 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4">
+        <nav className="p-4 pb-20 overflow-y-auto" style={{ height: 'calc(100vh - 200px)' }}>
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.path}>
+                {item.children ? (
+                  // Parent menu with children
+                  <div>
+                    <button
+                      onClick={() => toggleMenu(item.path)}
+                      className={`flex items-center justify-between w-full px-4 py-3 rounded-md text-sm font-medium transition-colors duration-200 ${
+                        hasActiveChild(item) || isActiveRoute(item.path)
+                          ? 'bg-[rgb(var(--color-primary))] text-white'
+                          : 'text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))]'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        {item.icon}
+                        <span className="ml-3">{item.label}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {item.count && (
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            hasActiveChild(item) || isActiveRoute(item.path)
+                              ? 'bg-white/80 text-white'
+                              : 'bg-[rgb(var(--color-muted))] text-[rgb(var(--color-muted-foreground))]'
+                          }`}>
+                            {item.count}
+                          </span>
+                        )}
+                        <Icon 
+                          icon={isMenuExpanded(item.path) ? "lucide:chevron-down" : "lucide:chevron-right"} 
+                          width={16} 
+                          height={16} 
+                        />
+                      </div>
+                    </button>
+                    
+                    {/* Submenu */}
+                    {isMenuExpanded(item.path) && (
+                      <ul className="mt-2 ml-4 space-y-1">
+                        {item.children.map((child) => (
+                          <li key={child.path}>
+                            <Link
+                              to={child.path}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center justify-between px-4 py-2 rounded-md text-sm transition-colors duration-200 ${
+                                isActiveRoute(child.path)
+                                  ? 'bg-[rgb(var(--color-primary))]/80 text-white'
+                                  : 'text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-foreground))] hover:bg-[rgb(var(--color-muted))]'
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                {child.icon}
+                                <span className="ml-3">{child.label}</span>
+                              </div>
+                              {child.count && (
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  isActiveRoute(child.path)
+                                    ? 'bg-white/80 text-white'
+                                    : 'bg-[rgb(var(--color-muted))] text-[rgb(var(--color-muted-foreground))]'
+                                }`}>
+                                  {child.count}
+                                </span>
+                              )}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  // Regular menu item without children
                 <Link
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
@@ -213,6 +319,7 @@ export const AdminLayout: React.FC = () => {
                     </span>
                   )}
                 </Link>
+                )}
               </li>
             ))}
           </ul>

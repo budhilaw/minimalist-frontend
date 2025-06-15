@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
-import { blogPosts } from '../../data/blogPosts';
 import { Sanitizer, AuditLogger } from '../../utils/security';
 import { formatBlogDate, formatTableDate } from '../../utils/dateFormatter';
+import { postsService, CreatePostRequest, UpdatePostRequest } from '../../services/postsService';
 
 interface PostFormData {
   title: string;
@@ -50,7 +50,16 @@ export const AdminPostForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<'content' | 'seo' | 'settings'>('content');
-
+  const [postInfo, setPostInfo] = useState<{
+    createdAt?: string;
+    updatedAt?: string;
+    author?: string;
+  }>({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Available categories
   const categories = [
@@ -65,25 +74,43 @@ export const AdminPostForm: React.FC = () => {
   // Load existing post data for editing
   useEffect(() => {
     if (isEditing && id) {
-      const existingPost = blogPosts.find(post => post.id === id);
-      if (existingPost) {
-        setFormData({
-          title: existingPost.title,
-          slug: existingPost.id, // Using ID as slug for demo
-          excerpt: existingPost.excerpt,
-          content: existingPost.content,
-          category: existingPost.category,
-          tags: existingPost.tags,
-          featured: existingPost.featured,
-          published: true, // All existing posts are published
-          publishDate: existingPost.publishDate,
-          seo: {
-            metaTitle: existingPost.title,
-            metaDescription: existingPost.excerpt,
-            keywords: existingPost.tags
+      const loadPost = async () => {
+        try {
+          setLoading(true);
+          const response = await postsService.getPostById(id);
+          if (response.data) {
+            const post = response.data;
+            setFormData({
+              title: post.title,
+              slug: post.slug,
+              excerpt: post.excerpt || '',
+              content: post.content,
+              category: post.category,
+              tags: post.tags,
+              featured: post.featured,
+              published: post.published,
+              publishDate: post.published_at ? post.published_at.split('T')[0] : post.created_at.split('T')[0],
+              seo: {
+                metaTitle: post.seo_title || post.title,
+                metaDescription: post.seo_description || post.excerpt || '',
+                keywords: post.seo_keywords ? post.seo_keywords.split(',').map(k => k.trim()) : post.tags
+              }
+            });
+            setPostInfo({
+              createdAt: post.created_at,
+              updatedAt: post.updated_at,
+              author: 'Admin' // Default author since backend doesn't have author info
+            });
           }
-        });
-      }
+        } catch (error) {
+          console.error('Failed to load post:', error);
+          alert('Failed to load post data');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      loadPost();
     }
   }, [isEditing, id]);
 
@@ -172,37 +199,89 @@ export const AdminPostForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setMessage(null);
 
     try {
       // Validate required fields
       if (!formData.title.trim() || !formData.excerpt.trim() || !formData.content.trim()) {
-        alert('Please fill in all required fields (Title, Excerpt, Content)');
+        setMessage({
+          type: 'error',
+          text: 'Please fill in all required fields (Title, Excerpt, Content)'
+        });
         return;
       }
 
-      // Sanitize content
-      const sanitizedData = {
-        ...formData,
+      // Prepare data for API
+      const postData: CreatePostRequest | UpdatePostRequest = {
+        title: Sanitizer.sanitizeText(formData.title),
+        slug: formData.slug || generateSlug(formData.title),
         content: Sanitizer.sanitizeHTML(formData.content),
-        excerpt: Sanitizer.sanitizeText(formData.excerpt)
+        excerpt: Sanitizer.sanitizeText(formData.excerpt),
+        category: formData.category,
+        tags: formData.tags,
+        featured: formData.featured,
+        published: formData.published,
+        seo_title: formData.seo.metaTitle,
+        seo_description: formData.seo.metaDescription,
+        seo_keywords: formData.seo.keywords.join(', ')
       };
+
+      let response;
+      if (isEditing && id) {
+        response = await postsService.updatePost(id, postData);
+      } else {
+        response = await postsService.createPost(postData);
+      }
+
+      if (response.error) {
+        setMessage({
+          type: 'error',
+          text: `Error ${isEditing ? 'updating' : 'creating'} post: ${response.error}`
+        });
+        return;
+      }
 
       // Log action
       AuditLogger.log(isEditing ? 'POST_UPDATED' : 'POST_CREATED', {
         postId: id || 'new',
-        title: sanitizedData.title,
-        category: sanitizedData.category,
-        published: sanitizedData.published
+        title: postData.title,
+        category: postData.category,
+        published: postData.published
       });
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Show success message and stay on the page
+      setMessage({
+        type: 'success',
+        text: `Post ${isEditing ? 'updated' : 'created'} successfully!`
+      });
 
-      // Navigate back to posts list
-      navigate('/admin/posts');
-          } catch (error) {
-        alert('Error saving post. Please try again.');
-      } finally {
+      // If creating a new post, redirect to edit mode with the new post ID
+      if (!isEditing && response.data?.post) {
+        const newPostId = response.data.post.id;
+        navigate(`/admin/posts/${newPostId}/edit`, { replace: true });
+      }
+
+      // Update post info if we're editing
+      if (isEditing && response.data?.post) {
+        const updatedPost = response.data.post;
+        setPostInfo({
+          createdAt: updatedPost.created_at,
+          updatedAt: updatedPost.updated_at,
+          author: 'Admin'
+        });
+      }
+
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setMessage(null);
+      }, 5000);
+
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: `Error ${isEditing ? 'updating' : 'creating'} post. Please try again.`
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -414,6 +493,32 @@ export const AdminPostForm: React.FC = () => {
                 </div>
               </article>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Message */}
+      {message && (
+        <div className={`p-4 rounded-lg border mb-6 ${
+          message.type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+            : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+        }`}>
+          <div className="flex items-center">
+            <Icon 
+              icon={message.type === 'success' ? 'lucide:check-circle' : 'lucide:alert-circle'} 
+              className="mr-2" 
+              width={20} 
+              height={20} 
+            />
+            <span>{message.text}</span>
+            <button
+              type="button"
+              onClick={() => setMessage(null)}
+              className="ml-auto hover:opacity-70"
+            >
+              <Icon icon="lucide:x" width={16} height={16} />
+            </button>
           </div>
         </div>
       )}
@@ -787,18 +892,26 @@ export const AdminPostForm: React.FC = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-[rgb(var(--color-muted-foreground))]">Author:</span>
-                  <span className="text-[rgb(var(--color-foreground))]">Ericsson Budhilaw</span>
+                  <span className="text-[rgb(var(--color-foreground))]">
+                    {isEditing ? (loading ? 'Loading...' : postInfo.author || 'Admin') : 'Admin'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[rgb(var(--color-muted-foreground))]">Created:</span>
                   <span className="text-[rgb(var(--color-foreground))]">
-                    {isEditing ? 'Loading...' : 'New post'}
+                    {isEditing 
+                      ? (loading ? 'Loading...' : postInfo.createdAt ? formatBlogDate(postInfo.createdAt) : 'Unknown')
+                      : 'New post'
+                    }
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[rgb(var(--color-muted-foreground))]">Last Modified:</span>
                   <span className="text-[rgb(var(--color-foreground))]">
-                    {formatTableDate(new Date())}
+                    {isEditing 
+                      ? (loading ? 'Loading...' : postInfo.updatedAt ? formatBlogDate(postInfo.updatedAt) : 'Unknown')
+                      : 'Not saved yet'
+                    }
                   </span>
                 </div>
               </div>

@@ -13,8 +13,12 @@ export const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   
+  // Check if we're in preview mode
+  const searchParams = new URLSearchParams(location.search);
+  const isPreviewMode = searchParams.get('preview') === 'true';
+  
   // Fetch single post
-  const { post, loading, error } = useSinglePost(slug);
+  const { post, loading, error } = useSinglePost(slug, isPreviewMode);
   
   // Fetch all published posts for related posts and navigation
   const { posts: allPosts } = usePublishedPosts({ limit: 100 });
@@ -33,7 +37,6 @@ export const BlogPost: React.FC = () => {
     title: post?.title,
     description: post?.excerpt,
     image: post?.featured_image,
-    url: window.location.href,
     type: 'article'
   });
 
@@ -100,6 +103,22 @@ export const BlogPost: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-16 bg-[rgb(var(--color-background))]">
+      {/* Preview Mode Banner */}
+      {isPreviewMode && !post?.published && (
+        <div className="bg-orange-600 text-white py-3 px-4 text-center relative">
+          <div className="flex items-center justify-center space-x-2">
+            <Icon icon="lucide:eye" width={20} height={20} />
+            <span className="font-medium">Preview Mode</span>
+            <span className="hidden sm:inline">- This is a draft post and is not visible to the public</span>
+          </div>
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+            <span className="bg-orange-700 px-2 py-1 rounded text-xs font-medium">
+              DRAFT
+            </span>
+          </div>
+        </div>
+      )}
+      
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Breadcrumb Navigation */}
         <Breadcrumb items={breadcrumbs} className="mb-6" />

@@ -164,7 +164,7 @@ export const useFeaturedPosts = () => {
   return state;
 };
 
-export const useSinglePost = (slug: string | undefined) => {
+export const useSinglePost = (slug: string | undefined, isPreview: boolean = false) => {
   const [state, setState] = useState<UseSinglePostState>({
     post: null,
     loading: true,
@@ -181,7 +181,7 @@ export const useSinglePost = (slug: string | undefined) => {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
       try {
-        const response = await BlogService.getPostBySlug(slug);
+        const response = await BlogService.getPostBySlug(slug, isPreview);
         
         if (response.error) {
           setState(prev => ({ 
@@ -209,7 +209,7 @@ export const useSinglePost = (slug: string | undefined) => {
     };
 
     fetchPost();
-  }, [slug]);
+  }, [slug, isPreview]);
 
   return state;
 }; 

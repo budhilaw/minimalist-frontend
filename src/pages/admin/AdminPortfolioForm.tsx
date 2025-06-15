@@ -1,36 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
+import { PortfolioService, PortfolioProject } from '../../services/portfolioService';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
+import { useNotification, Notification } from '../../components/Notification';
 
 export const AdminPortfolioForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'advanced'>('basic');
+  const { notification, showNotification: showNotif, hideNotification } = useNotification();
 
-  const [formData, setFormData] = useState<Omit<PortfolioProject, 'id' | 'createdAt' | 'updatedAt'>>({
+  const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     description: '',
-    longDescription: '',
+    long_description: '',
     category: 'web',
-    technologies: [],
-    image: '🚀',
-    liveUrl: '',
-    githubUrl: '',
+    technologies: [] as string[],
+    image_url: '',
+    live_url: '',
+    github_url: '',
     featured: false,
+    active: true,
     status: 'planned',
-    startDate: '',
-    endDate: '',
-    client: '',
-    highlights: []
+    start_date: '',
+    end_date: '',
+    client: ''
   });
 
   const [newTechnology, setNewTechnology] = useState('');
-  const [newHighlight, setNewHighlight] = useState('');
+
+  // Parse validation errors from API response
+  const parseValidationError = (errorMessage: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Convert error to string if it's not already
+    let errorStr: string;
+    if (typeof errorMessage === 'string') {
+      errorStr = errorMessage;
+    } else if (errorMessage && typeof errorMessage === 'object') {
+      // Handle backend error objects like {code, message, timestamp}
+      errorStr = errorMessage.message || errorMessage.error || JSON.stringify(errorMessage);
+    } else {
+      errorStr = String(errorMessage || '');
+    }
+    
+    // Handle single field validation error like "live_url: Live URL must be a valid URL"
+    if (errorStr.includes(':')) {
+      const parts = errorStr.split(':');
+      if (parts.length >= 2) {
+        const field = parts[0].trim();
+        const message = parts.slice(1).join(':').trim();
+        errors[field] = message;
+      }
+    }
+    
+    return errors;
+  };
+
+  // Convert any error to string
+  const errorToString = (error: any): string => {
+    if (typeof error === 'string') {
+      return error;
+    } else if (error && typeof error === 'object') {
+      return error.message || error.error || JSON.stringify(error);
+    } else {
+      return String(error || 'Unknown error');
+    }
+  };
 
   // Available options
   const categories = [
@@ -51,40 +95,96 @@ export const AdminPortfolioForm: React.FC = () => {
   // Load existing project data for editing
   useEffect(() => {
     if (isEditing && id) {
-      const existingProject = portfolioProjects.find(project => project.id === id);
-      if (existingProject) {
-        setFormData({
-          title: existingProject.title,
-          description: existingProject.description,
-          longDescription: existingProject.longDescription,
-          category: existingProject.category,
-          technologies: existingProject.technologies,
-          image: existingProject.image,
-          liveUrl: existingProject.liveUrl || '',
-          githubUrl: existingProject.githubUrl || '',
-          featured: existingProject.featured,
-          status: existingProject.status,
-          startDate: existingProject.startDate,
-          endDate: existingProject.endDate || '',
-          client: existingProject.client || '',
-          highlights: existingProject.highlights
-        });
-      }
+      const loadProject = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await PortfolioService.getProjectAdmin(id);
+          if (response.error) {
+            setError(errorToString(response.error));
+          } else if (response.data) {
+            const project = response.data;
+            setFormData({
+              title: project.title,
+              slug: project.slug,
+              description: project.description,
+              long_description: project.long_description || '',
+              category: project.category,
+              technologies: project.technologies,
+              image_url: project.image_url || '',
+              live_url: project.live_url || '',
+              github_url: project.github_url || '',
+              featured: project.featured,
+              active: project.active,
+              status: project.status,
+              start_date: project.start_date,
+              end_date: project.end_date || '',
+              client: project.client || ''
+            });
+          }
+        } catch (error) {
+          setError('Failed to load project');
+          console.error('Error loading project:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadProject();
     }
   }, [isEditing, id]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    setFieldErrors({});
+
     try {
-      setIsSubmitting(true);
-      // In a real app, this would make an API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      // Navigate back to portfolio page
-      navigate('/admin/portfolio');
+      if (isEditing && id) {
+        const response = await PortfolioService.updateProject(id, formData);
+        if (response.error) {
+          // Parse validation errors
+          const validationErrors = parseValidationError(response.error);
+          if (Object.keys(validationErrors).length > 0) {
+            setFieldErrors(validationErrors);
+            showNotif('error', 'Validation Error', 'Please fix the validation errors below');
+          } else {
+            const errorMsg = errorToString(response.error);
+            setError(errorMsg);
+            showNotif('error', 'Update Failed', errorMsg);
+          }
+          return;
+        }
+        showNotif('success', 'Project Updated Successfully', 'Your project has been updated and saved.');
+      } else {
+        const response = await PortfolioService.createProject(formData);
+        if (response.error) {
+          // Parse validation errors
+          const validationErrors = parseValidationError(response.error);
+          if (Object.keys(validationErrors).length > 0) {
+            setFieldErrors(validationErrors);
+            showNotif('error', 'Validation Error', 'Please fix the validation errors below');
+          } else {
+            const errorMsg = errorToString(response.error);
+            setError(errorMsg);
+            showNotif('error', 'Creation Failed', errorMsg);
+          }
+          return;
+        }
+        showNotif('success', 'Project Created Successfully', 'Your new project has been added to your portfolio.');
+        
+        // Only redirect after creating a new project, not when editing
+        setTimeout(() => navigate('/admin/portfolio'), 1500);
+      }
     } catch (error) {
+      const errorMessage = 'Failed to save project';
+      setError(errorMessage);
+      showNotif('error', 'Save Failed', errorMessage);
       console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -107,27 +207,59 @@ export const AdminPortfolioForm: React.FC = () => {
     }));
   };
 
-  // Handle highlight addition
-  const addHighlight = () => {
-    if (newHighlight.trim() && !formData.highlights.includes(newHighlight.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        highlights: [...prev.highlights, newHighlight.trim()]
-      }));
-      setNewHighlight('');
-    }
-  };
 
-  // Handle highlight removal
-  const removeHighlight = (highlight: string) => {
-    setFormData(prev => ({
-      ...prev,
-      highlights: prev.highlights.filter(h => h !== highlight)
-    }));
-  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+            {isEditing ? 'Edit Project' : 'New Project'}
+          </h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-[rgb(var(--color-muted-foreground))]">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && isEditing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+            Edit Project
+          </h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-red-500">Error loading project: {error}</p>
+          <Link 
+            to="/admin/portfolio"
+            className="inline-flex items-center px-4 py-2 mt-4 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
+          >
+            Back to Portfolio
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
+      {/* Notification */}
+      {notification && (
+        <div className="mb-6">
+          <Notification
+            type={notification.type}
+            title={notification.title}
+            message={notification.message}
+            description={notification.description}
+            onClose={hideNotification}
+          />
+        </div>
+      )}
+
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -148,10 +280,16 @@ export const AdminPortfolioForm: React.FC = () => {
             {/* Preview Content */}
             <div className="p-6">
               <div className="bg-[rgb(var(--color-background))] rounded-lg border border-[rgb(var(--color-border))] p-8">
-                {/* Project Icon */}
-                <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] rounded-lg mb-6 text-4xl">
-                  {formData.image}
-                </div>
+                {/* Project Image */}
+                {formData.image_url && (
+                  <div className="mb-6">
+                    <img 
+                      src={formData.image_url} 
+                      alt={formData.title}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
 
                 {/* Featured Badge */}
                 {formData.featured && (
@@ -185,13 +323,13 @@ export const AdminPortfolioForm: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  {formData.liveUrl && (
+                  {formData.live_url && (
                     <div className="inline-flex items-center px-6 py-3 bg-[rgb(var(--color-primary))] text-white rounded-md">
                       <Icon icon="lucide:external-link" width={16} height={16} className="mr-2" />
                       Live Demo
                     </div>
                   )}
-                  {formData.githubUrl && (
+                  {formData.github_url && (
                     <div className="inline-flex items-center px-6 py-3 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md">
                       <Icon icon="simple-icons:github" width={16} height={16} className="mr-2" />
                       View Code
@@ -238,6 +376,12 @@ export const AdminPortfolioForm: React.FC = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Error Display */}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
@@ -280,9 +424,43 @@ export const AdminPortfolioForm: React.FC = () => {
                           required
                           value={formData.title}
                           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                          className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+                          className={`w-full px-4 py-3 border rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent ${
+                            fieldErrors.title ? 'border-red-500' : 'border-[rgb(var(--color-border))]'
+                          }`}
                           placeholder="Enter project title"
                         />
+                        {fieldErrors.title && (
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
+                            <Icon icon="lucide:alert-circle" width={16} height={16} className="mr-1" />
+                            {fieldErrors.title}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Slug */}
+                      <div>
+                        <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
+                          URL Slug *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.slug}
+                          onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                          className={`w-full px-4 py-3 border rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent ${
+                            fieldErrors.slug ? 'border-red-500' : 'border-[rgb(var(--color-border))]'
+                          }`}
+                          placeholder="e.g., my-awesome-project"
+                        />
+                        <p className="mt-1 text-xs text-[rgb(var(--color-muted-foreground))]">
+                          This will be used in the URL: /portfolio/{formData.slug || 'your-slug'}
+                        </p>
+                        {fieldErrors.slug && (
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
+                            <Icon icon="lucide:alert-circle" width={16} height={16} className="mr-1" />
+                            {fieldErrors.slug}
+                          </p>
+                        )}
                       </div>
 
                       {/* Description */}
@@ -295,9 +473,17 @@ export const AdminPortfolioForm: React.FC = () => {
                           rows={3}
                           value={formData.description}
                           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+                          className={`w-full px-4 py-3 border rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent ${
+                            fieldErrors.description ? 'border-red-500' : 'border-[rgb(var(--color-border))]'
+                          }`}
                           placeholder="Brief description of the project"
                         />
+                        {fieldErrors.description && (
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
+                            <Icon icon="lucide:alert-circle" width={16} height={16} className="mr-1" />
+                            {fieldErrors.description}
+                          </p>
+                        )}
                       </div>
 
                       {/* Category & Status */}
@@ -347,9 +533,9 @@ export const AdminPortfolioForm: React.FC = () => {
                             <button
                               key={emoji}
                               type="button"
-                              onClick={() => setFormData(prev => ({ ...prev, image: emoji }))}
+                              onClick={() => setFormData(prev => ({ ...prev, image_url: emoji }))}
                               className={`w-12 h-12 text-2xl rounded-md border-2 transition-all ${
-                                formData.image === emoji
+                                formData.image_url === emoji
                                   ? 'border-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary))]/10'
                                   : 'border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))]'
                               }`}
@@ -371,8 +557,8 @@ export const AdminPortfolioForm: React.FC = () => {
                           Detailed Description
                         </label>
                         <RichTextEditor
-                          value={formData.longDescription}
-                          onChange={(value) => setFormData(prev => ({ ...prev, longDescription: value }))}
+                          value={formData.long_description}
+                          onChange={(value) => setFormData(prev => ({ ...prev, long_description: value }))}
                           placeholder="Write a detailed description using markdown..."
                           minHeight="300px"
                         />
@@ -421,50 +607,7 @@ export const AdminPortfolioForm: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Key Highlights */}
-                      <div>
-                        <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
-                          Key Highlights
-                        </label>
-                        <div className="space-y-3">
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={newHighlight}
-                              onChange={(e) => setNewHighlight(e.target.value)}
-                              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHighlight())}
-                              className="flex-1 px-4 py-2 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
-                              placeholder="Add project highlight"
-                            />
-                            <button
-                              type="button"
-                              onClick={addHighlight}
-                              className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
-                            >
-                              <Icon icon="lucide:plus" width={16} height={16} />
-                            </button>
-                          </div>
-                          <div className="space-y-2">
-                            {formData.highlights.map((highlight, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between px-3 py-2 bg-[rgb(var(--color-muted))] rounded-md"
-                              >
-                                <span className="text-sm text-[rgb(var(--color-foreground))]">
-                                  {highlight}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => removeHighlight(highlight)}
-                                  className="text-[rgb(var(--color-muted-foreground))] hover:text-red-500"
-                                >
-                                  <Icon icon="lucide:trash2" width={14} height={14} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
                   )}
 
@@ -479,11 +622,19 @@ export const AdminPortfolioForm: React.FC = () => {
                           </label>
                           <input
                             type="url"
-                            value={formData.liveUrl}
-                            onChange={(e) => setFormData(prev => ({ ...prev, liveUrl: e.target.value }))}
-                            className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+                            value={formData.live_url}
+                            onChange={(e) => setFormData(prev => ({ ...prev, live_url: e.target.value }))}
+                            className={`w-full px-4 py-3 border rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent ${
+                              fieldErrors.live_url ? 'border-red-500' : 'border-[rgb(var(--color-border))]'
+                            }`}
                             placeholder="https://example.com"
                           />
+                          {fieldErrors.live_url && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <Icon icon="lucide:alert-circle" width={16} height={16} className="mr-1" />
+                              {fieldErrors.live_url}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -492,11 +643,19 @@ export const AdminPortfolioForm: React.FC = () => {
                           </label>
                           <input
                             type="url"
-                            value={formData.githubUrl}
-                            onChange={(e) => setFormData(prev => ({ ...prev, githubUrl: e.target.value }))}
-                            className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
+                            value={formData.github_url}
+                            onChange={(e) => setFormData(prev => ({ ...prev, github_url: e.target.value }))}
+                            className={`w-full px-4 py-3 border rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent ${
+                              fieldErrors.github_url ? 'border-red-500' : 'border-[rgb(var(--color-border))]'
+                            }`}
                             placeholder="https://github.com/username/repo"
                           />
+                          {fieldErrors.github_url && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <Icon icon="lucide:alert-circle" width={16} height={16} className="mr-1" />
+                              {fieldErrors.github_url}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -508,8 +667,8 @@ export const AdminPortfolioForm: React.FC = () => {
                           </label>
                           <input
                             type="date"
-                            value={formData.startDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                            value={formData.start_date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                             className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
                           />
                         </div>
@@ -520,8 +679,8 @@ export const AdminPortfolioForm: React.FC = () => {
                           </label>
                           <input
                             type="date"
-                            value={formData.endDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                            value={formData.end_date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                             className="w-full px-4 py-3 border border-[rgb(var(--color-border))] rounded-md bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent"
                           />
                           <p className="text-xs text-[rgb(var(--color-muted-foreground))] mt-1">

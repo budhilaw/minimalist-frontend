@@ -60,6 +60,60 @@ export const usePortfolio = (params?: {
   return state;
 };
 
+// Admin hook for portfolio management
+export const usePortfolioAdmin = (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  featured?: boolean;
+  status?: string;
+}) => {
+  const [state, setState] = useState<UsePortfolioState>({
+    projects: [],
+    loading: true,
+    error: null,
+    total: 0,
+  });
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      try {
+        const response = await PortfolioService.getAllProjectsAdmin(params);
+        
+        if (response.error) {
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            error: response.error || 'Failed to fetch projects'
+          }));
+          return;
+        }
+
+        if (response.data) {
+          setState({
+            projects: response.data.projects,
+            total: response.data.total,
+            loading: false,
+            error: null,
+          });
+        }
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to fetch projects',
+        }));
+      }
+    };
+
+    fetchProjects();
+  }, [params?.page, params?.limit, params?.category, params?.featured, params?.status]);
+
+  return state;
+};
+
 export const useFeaturedProjects = () => {
   const [state, setState] = useState<UsePortfolioState>({
     projects: [],

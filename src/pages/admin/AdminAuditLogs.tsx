@@ -146,6 +146,24 @@ const AdminAuditLogs: React.FC = () => {
             <Icon icon="lucide:refresh-cw" className="w-4 h-4" />
             <span>Refresh</span>
           </button>
+          <button
+            onClick={async () => {
+              if (confirm('Are you sure you want to clear all audit logs? This action cannot be undone.')) {
+                try {
+                  const auditService = AuditService.getInstance();
+                  await auditService.clearAllLogs();
+                  setAuditLogs([]);
+                } catch (error) {
+                  console.error('Failed to clear audit logs:', error);
+                  alert('Failed to clear audit logs. Please try again.');
+                }
+              }
+            }}
+            className="flex items-center space-x-2 px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Icon icon="lucide:trash-2" className="w-4 h-4" />
+            <span>Clear All</span>
+          </button>
         </div>
       </div>
 
@@ -263,7 +281,7 @@ const AdminAuditLogs: React.FC = () => {
       </div>
 
       {/* Audit Logs Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Audit Trail</h3>
@@ -291,7 +309,7 @@ const AdminAuditLogs: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" style={{ minWidth: '900px' }}>
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -391,6 +409,7 @@ const AdminAuditLogs: React.FC = () => {
             </tbody>
           </table>
         </div>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -421,7 +440,6 @@ const AdminAuditLogs: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
 
       {/* Detail Modal */}
       {selectedLog && (

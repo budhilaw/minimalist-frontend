@@ -98,36 +98,60 @@ export const aboutData: AboutData = {
     {
       id: 'paper-id',
       company: 'Paper.id',
-      position: 'Senior Full-Stack Engineer',
-      period: '2020 - Present',
+      position: 'Technical Lead',
+      period: '2023 - Present',
       achievements: [
-        'Architected and built scalable full-stack applications handling thousands of concurrent users',
-        'Developed responsive frontend interfaces using ReactJS, VueJS, and NextJS frameworks',
-        'Implemented high-performance APIs and database optimization strategies with 99.9% uptime',
-        'Led cross-functional teams to deliver enterprise-grade software solutions',
-        'Worked with cloud infrastructure on AWS and GCP for deployment and scaling',
-        'Mentored junior developers and established coding standards across the organization'
+        'Handle people management in Malang City for all squads.',
+        'Manage core squad that handles all payments feature such as Disbursement, Top-up, Withdrawal, Payment Session (Link) etc (Backend and Frontend).',
+        'Managing and Designing technical documentation for core squad and cross squad such as P2P Ledger, Fee Management, Cross Border Payment, QRIS Payment etc.',
+        'Designed first team in business unit Payment Gateway from zero including job post creation, talent search, creating live code test, etc.',
+        'Successfully deliver good quality service with success rate 100% of disbursement from Paper.id, helping Paper.id to reducing their biggest cost in Fintech Company.',
+        'Lead development of robust payment processor systems, overseeing architecture design and implementation.',
+        'Encourage Core squad for good quality code like performing unit test coverage up to 90% and 1.8% duplications codes both for Backend and Frontend using SonarQube.',
+        'Designed and developed an internal tools project using Rust.',
+        'Integrated the internal tools project with the OpenAI Assistant API to enhance automation capabilities.',
+        'Implemented Retrieval-Augmented Generation (RAG) by integrating the internal tools project with a Vector Database (MongoDB).'
       ],
-      technologies: ['ReactJS', 'VueJS', 'NextJS', 'Go', 'JavaScript', 'Rust', 'Python', 'PostgreSQL', 'Docker', 'AWS', 'GCP'],
+      technologies: ['AngularJS', 'Go', 'PHP', 'Rust', 'MySQL', 'Docker', 'GCP', 'Redis', 'RabbitMQ', 'OpenAI API', 'Claude API', 'MongoDB', 'SonarQube'],
       current: true,
       order: 1
     },
     {
-      id: 'freelance-previous',
-      company: 'Previous Companies & Freelance',
-      position: 'Full-Stack & Backend Developer',
-      period: '2018 - 2020',
+      id: 'emtrade',
+      company: 'Emtrade',
+      position: 'Backend Engineer',
+      period: '2021 - 2023',
       achievements: [
-        'Delivered robust full-stack web applications for diverse client portfolios',
-        'Built modern frontend interfaces with React and Vue.js ecosystem',
-        'Specialized in PHP and WordPress development for enterprise clients',
-        'Built and maintained RESTful APIs serving millions of requests monthly',
-        'Implemented DevOps practices reducing deployment time by 70%',
-        'Gained extensive experience in multiple programming languages and frameworks'
+        'Developed some features such as Online Class, Fundamental and Analyst services',
+        'Migrated from PHP to Go (Golang). Ported from Monolith Laravel to Microservice Golang.',
+        'Evangelist the Test-Driven Development to Emtrade\'s engineers by creating sharing session and code review.',
+        'Assisted the Head of Engineering to riset about new architecture, tracing & monitoring services and improve services performances.',
+        'Assisted the Lead Engineer to refactor internal library (golib) and code review.',
+        'Led an Refactor Team to migrate legacy code into Clean Code architecture with Go and improved unit test code coverage around 70% to 90%.',
+        'Led an Datadog implementation for tracing & monitoring that will help engineers to debug and improve the performance of some services.',
+        'Designed the new archicture for authentication process by decoupling the Admin and Member services.',
+        'Worked with other technologies such as Google Cloud, Redash, Grafana and Docker.'
       ],
-      technologies: ['ReactJS', 'VueJS', 'PHP', 'WordPress', 'JavaScript', 'Node.js', 'Python', 'MySQL', 'Git', 'Linux'],
+      technologies: ['Go', 'PHP', 'MySQL', 'Docker', 'GCP', 'Redis', 'RabbitMQ'],
       current: false,
       order: 2
+    },
+    {
+      id: 'freelance-previous',
+      company: 'Upwork (Freelance)',
+      position: 'Senior Full-Stack Developer',
+      period: '2018 - 2021',
+      achievements: [
+        'Delivered robust full-stack web applications for diverse client portfolios such as E-commerce, Company Profile, Online Travel Ticket, etc.',
+        'Built modern frontend interfaces with React and Vue.js ecosystem.',
+        'Specialized in PHP and WordPress development for enterprise clients.',
+        'Built and maintained RESTful APIs serving millions of requests monthly for E-commerce and Online Travel Ticket.',
+        'Implemented DevOps practices reducing deployment time by 70%',
+        'Gained extensive experience in multiple programming languages and frameworks such as React, Vue.js, Node.js, Python, MySQL, Git, Linux, etc.'
+      ],
+      technologies: ['ReactJS', 'VueJS', 'PHP', 'WordPress', 'JavaScript', 'Node.js', 'Python', 'MySQL', 'Git', 'Linux', 'Docker', 'GCP', 'Redis', 'RabbitMQ', 'Go'],
+      current: false,
+      order: 3
     }
   ],
   skills: [

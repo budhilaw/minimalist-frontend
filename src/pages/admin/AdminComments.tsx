@@ -225,7 +225,7 @@ export const AdminComments: React.FC = () => {
       {/* Comments Table */}
       <div className="bg-[rgb(var(--color-card))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" style={{ minWidth: '800px' }}>
             <thead className="bg-[rgb(var(--color-muted))]">
               <tr>
                 <th className="px-4 py-3 text-left">

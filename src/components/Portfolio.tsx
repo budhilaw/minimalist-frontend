@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { usePortfolio, useFeaturedProjects } from '../hooks/usePortfolio';
 import { LoadingSection, ErrorMessage } from './LoadingSpinner';
@@ -107,9 +108,11 @@ export const Portfolio: React.FC = () => {
                     </div>
 
                     {/* Project Info */}
-                    <h4 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-3 group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
-                      {project.title}
-                    </h4>
+                    <Link to={`/portfolio/${project.slug}`}>
+                      <h4 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-3 group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200 cursor-pointer">
+                        {project.title}
+                      </h4>
+                    </Link>
                     
                     <p className="text-[rgb(var(--color-muted-foreground))] mb-6 leading-relaxed">
                       {project.description}
@@ -129,12 +132,19 @@ export const Portfolio: React.FC = () => {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <Link
+                        to={`/portfolio/${project.slug}`}
+                        className="inline-flex items-center justify-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
+                      >
+                        <Icon icon="lucide:eye" width={16} height={16} className="mr-2" />
+                        View Details
+                      </Link>
                       {project.live_url && (
                         <a
                           href={project.live_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200"
+                          className="inline-flex items-center justify-center px-4 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors duration-200"
                         >
                           <Icon icon="lucide:play" width={16} height={16} className="mr-2" />
                           Live Demo
@@ -186,9 +196,11 @@ export const Portfolio: React.FC = () => {
                   </div>
 
                   {/* Project Info */}
-                  <h4 className="text-lg font-bold text-[rgb(var(--color-foreground))] mb-2 group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
-                    {project.title}
-                  </h4>
+                  <Link to={`/portfolio/${project.slug}`}>
+                    <h4 className="text-lg font-bold text-[rgb(var(--color-foreground))] mb-2 group-hover:text-[rgb(var(--color-primary))] transition-colors duration-200 cursor-pointer">
+                      {project.title}
+                    </h4>
+                  </Link>
                   
                   <p className="text-[rgb(var(--color-muted-foreground))] mb-4 text-sm leading-relaxed line-clamp-3">
                     {project.description}
@@ -234,12 +246,19 @@ export const Portfolio: React.FC = () => {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
+                    <Link
+                      to={`/portfolio/${project.slug}`}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200 text-sm"
+                    >
+                      <Icon icon="lucide:eye" width={14} height={14} className="mr-1" />
+                      Details
+                    </Link>
                     {project.live_url && (
                       <a
                         href={project.live_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors duration-200 text-sm"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-[rgb(var(--color-border))] text-[rgb(var(--color-foreground))] rounded-md hover:bg-[rgb(var(--color-muted))] transition-colors duration-200 text-sm"
                       >
                         <Icon icon="lucide:external-link" width={14} height={14} className="mr-1" />
                         Demo

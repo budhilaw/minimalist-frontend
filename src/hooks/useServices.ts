@@ -60,6 +60,62 @@ export const useServices = (params?: {
   return state;
 };
 
+// Admin hook for services management
+export const useServicesAdmin = (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  active?: boolean;
+}) => {
+  const [state, setState] = useState<UseServicesState>({
+    services: [],
+    loading: true,
+    error: null,
+    total: 0,
+  });
+
+  const fetchServices = async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const response = await ServiceService.getAllServicesAdmin(params);
+      
+      if (response.error) {
+        setState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: response.error || 'Failed to fetch services'
+        }));
+        return;
+      }
+
+      if (response.data) {
+        setState({
+          services: response.data.services,
+          total: response.data.total,
+          loading: false,
+          error: null,
+        });
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to fetch services',
+      }));
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, [params?.page, params?.limit, params?.category, params?.active]);
+
+  return {
+    ...state,
+    refetch: fetchServices
+  };
+};
+
 export const useActiveServices = () => {
   const [state, setState] = useState<UseServicesState>({
     services: [],

@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { RichTextEditor } from '../../components/admin/RichTextEditor';
-import { services, iconMap, Service } from '../../data/services';
+import { ServiceService, Service } from '../../services/serviceService';
+import { useNotification, Notification } from '../../components/Notification';
 
 interface ServiceFormData {
   title: string;
   description: string;
-  longDescription: string;
   features: string[];
-  icon: string;
-  category: 'development' | 'consulting' | 'design' | 'devops';
+  category: string;
+  active: boolean;
 }
 
 export const AdminServiceForm: React.FC = () => {
@@ -21,38 +21,144 @@ export const AdminServiceForm: React.FC = () => {
   const [activeTab, setActiveTab] = useState('basic');
   const [newFeature, setNewFeature] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { notification, showNotification: showNotif, hideNotification } = useNotification();
 
   const [formData, setFormData] = useState<ServiceFormData>({
     title: '',
     description: '',
-    longDescription: '',
     features: [],
-    icon: 'code',
-    category: 'development'
+    category: 'development',
+    active: true
   });
+
+  // Parse validation errors from API response
+  const parseValidationError = (errorMessage: any) => {
+    const errors: Record<string, string> = {};
+    
+    // Convert error to string if it's not already
+    let errorStr: string;
+    if (typeof errorMessage === 'string') {
+      errorStr = errorMessage;
+    } else if (errorMessage && typeof errorMessage === 'object') {
+      // Handle backend error objects like {code, message, timestamp}
+      errorStr = errorMessage.message || errorMessage.error || JSON.stringify(errorMessage);
+    } else {
+      errorStr = String(errorMessage || '');
+    }
+    
+    // Handle single field validation error like "title: Title is required"
+    if (errorStr.includes(':')) {
+      const parts = errorStr.split(':');
+      if (parts.length >= 2) {
+        const field = parts[0].trim();
+        const message = parts.slice(1).join(':').trim();
+        errors[field] = message;
+      }
+    }
+    
+    return errors;
+  };
+
+
+
+  // Convert any error to string
+  const errorToString = (error: any): string => {
+    if (typeof error === 'string') {
+      return error;
+    } else if (error && typeof error === 'object') {
+      return error.message || error.error || JSON.stringify(error);
+    } else {
+      return String(error || 'Unknown error');
+    }
+  };
 
   // Load service data if editing
   useEffect(() => {
     if (isEditing && id) {
-      const service = services.find(s => s.id === id);
-      if (service) {
-        setFormData({
-          title: service.title,
-          description: service.description,
-          longDescription: service.longDescription || '',
-          features: [...service.features],
-          icon: service.icon,
-          category: service.category
-        });
-      }
+      const loadService = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await ServiceService.getServiceAdmin(id);
+          if (response.error) {
+            setError(errorToString(response.error));
+          } else if (response.data) {
+            const service = response.data;
+            setFormData({
+              title: service.title,
+              description: service.description,
+              features: service.features,
+              category: service.category,
+              active: service.active
+            });
+          }
+        } catch (error) {
+          setError('Failed to load service');
+          console.error('Error loading service:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadService();
     }
   }, [isEditing, id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Navigate back to services list
-    navigate('/admin/services');
+    setIsSubmitting(true);
+    setError(null);
+    setFieldErrors({});
+
+    try {
+      if (isEditing && id) {
+        const response = await ServiceService.updateService(id, formData);
+        if (response.error) {
+          // Parse validation errors
+          const validationErrors = parseValidationError(response.error);
+          if (Object.keys(validationErrors).length > 0) {
+            setFieldErrors(validationErrors);
+            showNotif('error', 'Validation Error', 'Please fix the validation errors below');
+          } else {
+            const errorMsg = errorToString(response.error);
+            setError(errorMsg);
+            showNotif('error', 'Update Failed', errorMsg);
+          }
+          return;
+        }
+        showNotif('success', 'Service Updated Successfully', 'Your service has been updated and saved.');
+      } else {
+        const response = await ServiceService.createService(formData);
+        if (response.error) {
+          // Parse validation errors
+          const validationErrors = parseValidationError(response.error);
+          if (Object.keys(validationErrors).length > 0) {
+            setFieldErrors(validationErrors);
+            showNotif('error', 'Validation Error', 'Please fix the validation errors below');
+          } else {
+            const errorMsg = errorToString(response.error);
+            setError(errorMsg);
+            showNotif('error', 'Creation Failed', errorMsg);
+          }
+          return;
+        }
+        showNotif('success', 'Service Created Successfully', 'Your new service has been added.');
+        
+        // Only redirect after creating a new service, not when editing
+        setTimeout(() => navigate('/admin/services'), 1500);
+      }
+    } catch (error) {
+      const errorMessage = 'Failed to save service';
+      setError(errorMessage);
+      showNotif('error', 'Save Failed', errorMessage);
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: keyof ServiceFormData, value: any) => {
@@ -86,15 +192,8 @@ export const AdminServiceForm: React.FC = () => {
 
   // Preview component
   const ServicePreview = () => {
-    const iconName = iconMap[formData.icon] || iconMap.code;
-    
     return (
       <div className="bg-[rgb(var(--color-background))] p-8 rounded-lg border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] transition-all duration-300 hover:shadow-lg">
-        {/* Icon */}
-        <div className="flex items-center justify-center w-12 h-12 bg-[rgb(var(--color-primary))] rounded-lg mb-6">
-          <Icon icon={iconName} className="w-6 h-6 text-white" />
-        </div>
-
         {/* Content */}
         <h3 className="text-xl font-bold text-[rgb(var(--color-foreground))] mb-4">
           {formData.title || 'Service Title'}
@@ -116,10 +215,60 @@ export const AdminServiceForm: React.FC = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+            {isEditing ? 'Edit Service' : 'New Service'}
+          </h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-[rgb(var(--color-muted-foreground))]">Loading service...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && isEditing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+            Edit Service
+          </h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-red-500">Error loading service: {error}</p>
+          <button 
+            onClick={() => navigate('/admin/services')}
+            className="inline-flex items-center px-4 py-2 mt-4 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
+          >
+            Back to Services
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <>
+      {/* Notification */}
+      {notification && (
+        <div className="mb-6">
+          <Notification
+            type={notification.type}
+            title={notification.title}
+            message={notification.message}
+            description={notification.description}
+            onClose={hideNotification}
+          />
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/admin/services')}
@@ -147,10 +296,11 @@ export const AdminServiceForm: React.FC = () => {
           </button>
           <button
             onClick={handleSubmit}
-            className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 transition-colors"
+            disabled={isSubmitting}
+            className="flex items-center px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded-md hover:bg-[rgb(var(--color-primary))]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Icon icon="lucide:save" width={16} height={16} className="mr-2" />
-            {isEditing ? 'Update Service' : 'Create Service'}
+            {isSubmitting ? 'Saving...' : (isEditing ? 'Update Service' : 'Create Service')}
           </button>
         </div>
       </div>
@@ -183,6 +333,12 @@ export const AdminServiceForm: React.FC = () => {
 
             {/* Tab Content */}
             <form onSubmit={handleSubmit} className="p-6">
+              {/* Error Display */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              )}
               {/* Basic Info Tab */}
               {activeTab === 'basic' && (
                 <div className="space-y-6">
@@ -217,24 +373,6 @@ export const AdminServiceForm: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
-                        Icon
-                      </label>
-                      <select
-                        value={formData.icon}
-                        onChange={(e) => handleInputChange('icon', e.target.value)}
-                        className="w-full px-3 py-2 border border-[rgb(var(--color-border))] rounded-md focus:ring-2 focus:ring-[rgb(var(--color-primary))] focus:border-transparent bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))]"
-                      >
-                        <option value="code">Code</option>
-                        <option value="rocket">Rocket</option>
-                        <option value="settings">Settings</option>
-                        <option value="users">Users</option>
-                        <option value="search">Search</option>
-                        <option value="shield">Shield</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">
                         Category
                       </label>
                       <select
@@ -260,8 +398,8 @@ export const AdminServiceForm: React.FC = () => {
                       Detailed Description
                     </label>
                     <RichTextEditor
-                      value={formData.longDescription}
-                      onChange={(value) => handleInputChange('longDescription', value)}
+                      value={formData.description}
+                      onChange={(value) => handleInputChange('description', value)}
                       placeholder="Write a detailed description of the service using markdown..."
                     />
                   </div>
@@ -330,6 +468,7 @@ export const AdminServiceForm: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }; 

@@ -41,9 +41,13 @@ export interface FeatureSettings {
 
 export interface NotificationSettings {
   emailNotifications: boolean;
-  newCommentNotifications: boolean;
-  newContactFormNotifications: boolean;
-  systemAlertNotifications: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUsername?: string;
+  smtpPassword?: string;
+  telegramNotifications?: boolean;
+  telegramBotToken?: string;
+  telegramChatId?: string;
 }
 
 export interface CommentRateLimitSettings {

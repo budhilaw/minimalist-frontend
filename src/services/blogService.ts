@@ -70,7 +70,8 @@ export class BlogService {
     return apiClient.get<BlogPost>(`/posts/${id}`);
   }
 
-  static async getPostBySlug(slug: string): Promise<ApiResponse<BlogPost>> {
-    return apiClient.get<BlogPost>(`/posts/slug/${slug}`);
+  static async getPostBySlug(slug: string, isPreview: boolean = false): Promise<ApiResponse<BlogPost>> {
+    const endpoint = `/posts/slug/${slug}${isPreview ? '?preview=true' : ''}`;
+    return apiClient.get<BlogPost>(endpoint);
   }
 } 

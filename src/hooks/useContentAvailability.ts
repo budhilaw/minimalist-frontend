@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PortfolioService } from '../services/portfolioService';
 import { ServiceService } from '../services/serviceService';
 import { BlogService } from '../services/blogService';
+import { useSiteSettings } from '../contexts/SiteSettingsContext';
 
 interface ContentAvailability {
   hasPortfolio: boolean;
@@ -11,6 +12,7 @@ interface ContentAvailability {
 }
 
 export const useContentAvailability = () => {
+  const { settings, loading: settingsLoading } = useSiteSettings();
   const [availability, setAvailability] = useState<ContentAvailability>({
     hasPortfolio: false,
     hasServices: false,
@@ -20,23 +22,41 @@ export const useContentAvailability = () => {
 
   useEffect(() => {
     const checkContentAvailability = async () => {
+      // Wait for settings to load first
+      if (settingsLoading || !settings) {
+        return;
+      }
+
       try {
-        // Check for portfolio projects (limit 1 just to see if any exist)
-        const portfolioResponse = await PortfolioService.getAllProjects({ limit: 1 });
-        const hasPortfolio = !portfolioResponse.error && portfolioResponse.data && portfolioResponse.data.projects.length > 0;
+        // Check feature toggles first - if disabled, don't show regardless of content
+        const portfolioEnabled = settings.features.portfolio_enabled;
+        const servicesEnabled = settings.features.services_enabled;
+        const blogEnabled = settings.features.blog_enabled;
 
-        // Check for active services (limit 1 just to see if any exist)
-        const servicesResponse = await ServiceService.getActiveServices();
-        const hasServices = !servicesResponse.error && servicesResponse.data && servicesResponse.data.services.length > 0;
+        let hasPortfolio = false;
+        let hasServices = false;
+        let hasPosts = false;
 
-        // Check for published posts (limit 1 just to see if any exist)
-        const postsResponse = await BlogService.getPublishedPosts({ limit: 1 });
-        const hasPosts = !postsResponse.error && postsResponse.data && postsResponse.data.posts.length > 0;
+        // Only check for content if the feature is enabled
+        if (portfolioEnabled) {
+          const portfolioResponse = await PortfolioService.getAllProjects({ limit: 1 });
+          hasPortfolio = !portfolioResponse.error && portfolioResponse.data && portfolioResponse.data.projects.length > 0;
+        }
+
+        if (servicesEnabled) {
+          const servicesResponse = await ServiceService.getActiveServices();
+          hasServices = !servicesResponse.error && servicesResponse.data && servicesResponse.data.services.length > 0;
+        }
+
+        if (blogEnabled) {
+          const postsResponse = await BlogService.getPublishedPosts({ limit: 1 });
+          hasPosts = !postsResponse.error && postsResponse.data && postsResponse.data.posts.length > 0;
+        }
 
         setAvailability({
-          hasPortfolio: hasPortfolio || false,
-          hasServices: hasServices || false,
-          hasPosts: hasPosts || false,
+          hasPortfolio,
+          hasServices,
+          hasPosts,
           loading: false,
         });
       } catch (error) {
@@ -51,7 +71,7 @@ export const useContentAvailability = () => {
     };
 
     checkContentAvailability();
-  }, []);
+  }, [settings, settingsLoading]);
 
   return availability;
 }; 

@@ -216,6 +216,18 @@ export class AuditService {
     return data.logs.map((log: any) => this.transformAuditLog(log));
   }
 
+  async clearAllLogs(): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/admin/audit-logs`, 
+      this.getFetchOptions({
+        method: 'DELETE'
+      })
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to clear audit logs: ${response.statusText}`);
+    }
+  }
+
   async getStats(): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/admin/audit-logs/stats`, 
       this.getFetchOptions()

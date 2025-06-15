@@ -4,10 +4,15 @@ import { Icon } from '@iconify/react';
 import { Hero } from '../components/Hero';
 import { Blog } from '../components/Blog';
 import { useDocumentTitle, useSocialMeta, useStructuredData, generateWebsiteStructuredData, generatePersonStructuredData } from '../utils/seo';
-import { useSiteSettings } from '../contexts/SiteSettingsContext';
+import { useSiteSettings, useSiteSetting } from '../contexts/SiteSettingsContext';
 
 export const Home: React.FC = () => {
   const { settings } = useSiteSettings();
+  
+  // Get feature toggles
+  const portfolioEnabled = useSiteSetting('features.portfolio_enabled', true);
+  const servicesEnabled = useSiteSetting('features.services_enabled', true);
+  const blogEnabled = useSiteSetting('features.blog_enabled', true);
 
   // SEO: Set default page title structure "Site Title | Site Description"
   useDocumentTitle(); // No pageTitle provided, so it will use default structure
@@ -17,7 +22,6 @@ export const Home: React.FC = () => {
     title: settings?.site.site_name,
     description: settings?.site.site_description,
     image: settings?.site.photo_profile,
-    url: window.location.origin,
     type: 'website'
   });
 
@@ -120,6 +124,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Portfolio Preview Section */}
+      {portfolioEnabled && (
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -182,8 +187,10 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* Services Preview Section */}
+      {servicesEnabled && (
       <section className="py-20 bg-[rgb(var(--color-muted))]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -240,9 +247,10 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* Blog Section */}
-      <Blog />
+      {blogEnabled && <Blog />}
 
       {/* Contact CTA Section */}
       <section className="py-20">

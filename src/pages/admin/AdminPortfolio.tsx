@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import { portfolioProjects, PortfolioProject } from '../../data/portfolioProjects';
+import { usePortfolioAdmin } from '../../hooks/usePortfolio';
+import { PortfolioService } from '../../services/portfolioService';
 import { formatTableDate } from '../../utils/dateFormatter';
 
 export const AdminPortfolio: React.FC = () => {
@@ -14,8 +15,14 @@ export const AdminPortfolio: React.FC = () => {
     featured: 'all'
   });
 
+
+  // Fetch projects using the hook
+  const { projects, loading, error, total } = usePortfolioAdmin();
+
+
+
   // Filter projects
-  const filteredProjects = portfolioProjects.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
                          project.description.toLowerCase().includes(filters.search.toLowerCase()) ||
                          project.technologies.some(tech => tech.toLowerCase().includes(filters.search.toLowerCase()));
@@ -87,6 +94,32 @@ export const AdminPortfolio: React.FC = () => {
     return formatTableDate(dateString);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">Portfolio Projects</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-[rgb(var(--color-muted-foreground))]">Loading portfolio projects...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-foreground))]">Portfolio Projects</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-red-500">Error loading portfolio projects: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,7 +160,9 @@ export const AdminPortfolio: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Projects</p>
-              <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">{portfolioProjects.length}</p>
+              <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+                {loading ? '...' : total}
+              </p>
             </div>
             <Icon icon="lucide:briefcase" className="text-[rgb(var(--color-primary))]" width={24} height={24} />
           </div>
@@ -137,7 +172,7 @@ export const AdminPortfolio: React.FC = () => {
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Featured</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {portfolioProjects.filter(p => p.featured).length}
+                {loading ? '...' : projects.filter(p => p.featured).length}
               </p>
             </div>
             <Icon icon="lucide:star" className="text-yellow-600" width={24} height={24} />
@@ -148,7 +183,7 @@ export const AdminPortfolio: React.FC = () => {
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Completed</p>
               <p className="text-2xl font-bold text-green-600">
-                {portfolioProjects.filter(p => p.status === 'completed').length}
+                {loading ? '...' : projects.filter(p => p.status === 'completed').length}
               </p>
             </div>
             <Icon icon="lucide:check-circle" className="text-green-600" width={24} height={24} />
@@ -159,7 +194,7 @@ export const AdminPortfolio: React.FC = () => {
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">In Progress</p>
               <p className="text-2xl font-bold text-blue-600">
-                {portfolioProjects.filter(p => p.status === 'in-progress').length}
+                {loading ? '...' : projects.filter(p => p.status === 'in-progress').length}
               </p>
             </div>
             <Icon icon="lucide:clock" className="text-blue-600" width={24} height={24} />
@@ -320,7 +355,11 @@ export const AdminPortfolio: React.FC = () => {
                   <td className="px-6 py-5">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] rounded-lg flex items-center justify-center text-2xl">
-                        {project.image}
+                        {project.image_url ? (
+                          <img src={project.image_url} alt={project.title} className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          '📁'
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2 mb-1">
@@ -378,14 +417,14 @@ export const AdminPortfolio: React.FC = () => {
                   <td className="px-6 py-5">
                     <div className="flex items-center space-x-2 text-sm text-[rgb(var(--color-muted-foreground))]">
                       <Icon icon="lucide:calendar" width={16} height={16} />
-                      <span className="font-medium">{formatDate(project.updatedAt)}</span>
+                      <span className="font-medium">{formatDate(project.updated_at)}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center space-x-3">
-                      {project.liveUrl && (
+                      {project.live_url && (
                         <a
-                          href={project.liveUrl}
+                          href={project.live_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
@@ -395,9 +434,9 @@ export const AdminPortfolio: React.FC = () => {
                           Live
                         </a>
                       )}
-                      {project.githubUrl && (
+                      {project.github_url && (
                         <a
-                          href={project.githubUrl}
+                          href={project.github_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-3 py-2 text-xs font-medium text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-[rgb(var(--color-border))] hover:border-[rgb(var(--color-primary))] rounded-md transition-all"
@@ -434,7 +473,7 @@ export const AdminPortfolio: React.FC = () => {
 
       {/* Empty State */}
       {filteredProjects.length === 0 && (
-        <div className="bg-[rgb(var(--color-card))] p-12 rounded-lg border border-[rgb(var(--color-border))] text-center">
+        <div className="p-12 text-center">
           <Icon icon="lucide:briefcase" width={48} height={48} className="mx-auto text-[rgb(var(--color-muted-foreground))] mb-4" />
           <h3 className="text-lg font-medium text-[rgb(var(--color-foreground))] mb-2">
             No projects found

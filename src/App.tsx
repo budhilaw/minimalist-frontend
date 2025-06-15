@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { FeatureRoute } from './components/FeatureRoute';
 
 // Immediate loading for critical components
 import { Home } from './pages/Home';
@@ -14,6 +15,7 @@ import { Home } from './pages/Home';
 // Lazy load all pages
 const About = React.lazy(() => import('./pages/About').then(module => ({ default: module.About })));
 const Portfolio = React.lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
+const PortfolioDetail = React.lazy(() => import('./pages/PortfolioDetail').then(module => ({ default: module.PortfolioDetail })));
 const Services = React.lazy(() => import('./pages/Services').then(module => ({ default: module.Services })));
 const Contact = React.lazy(() => import('./pages/Contact').then(module => ({ default: module.Contact })));
 const BlogPosts = React.lazy(() => import('./pages/BlogPosts').then(module => ({ default: module.BlogPosts })));
@@ -30,7 +32,7 @@ const AdminPortfolio = React.lazy(() => import('./pages/admin/AdminPortfolio').t
 const AdminServices = React.lazy(() => import('./pages/admin/AdminServices').then(module => ({ default: module.AdminServices })));
 const AdminComments = React.lazy(() => import('./pages/admin/AdminComments').then(module => ({ default: module.AdminComments })));
 
-const AdminSEO = React.lazy(() => import('./pages/admin/AdminSEO').then(module => ({ default: module.AdminSEO })));
+
 const AdminProfile = React.lazy(() => import('./pages/admin/AdminProfile').then(module => ({ default: module.AdminProfile })));
 const AdminPostForm = React.lazy(() => import('./pages/admin/AdminPostForm').then(module => ({ default: module.AdminPostForm })));
 const AdminPortfolioForm = React.lazy(() => import('./pages/admin/AdminPortfolioForm').then(module => ({ default: module.AdminPortfolioForm })));
@@ -78,11 +80,32 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/about" element={<About />} />
-                      <Route path="/portfolio" element={<Portfolio />} />
-                      <Route path="/services" element={<Services />} />
+                      <Route path="/portfolio" element={
+                        <FeatureRoute feature="portfolio_enabled">
+                          <Portfolio />
+                        </FeatureRoute>
+                      } />
+                      <Route path="/portfolio/:slug" element={
+                        <FeatureRoute feature="portfolio_enabled">
+                          <PortfolioDetail />
+                        </FeatureRoute>
+                      } />
+                      <Route path="/services" element={
+                        <FeatureRoute feature="services_enabled">
+                          <Services />
+                        </FeatureRoute>
+                      } />
                       <Route path="/contact" element={<Contact />} />
-                      <Route path="/blog" element={<BlogPosts />} />
-                      <Route path="/blog/:slug" element={<BlogPost />} />
+                      <Route path="/blog" element={
+                        <FeatureRoute feature="blog_enabled">
+                          <BlogPosts />
+                        </FeatureRoute>
+                      } />
+                      <Route path="/blog/:slug" element={
+                        <FeatureRoute feature="blog_enabled">
+                          <BlogPost />
+                        </FeatureRoute>
+                      } />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
@@ -151,7 +174,7 @@ function App() {
                   <AdminServiceForm />
                 </Suspense>
               } />
-              <Route path="services/edit/:id" element={
+              <Route path="services/:id/edit" element={
                 <Suspense fallback={<PageLoadingFallback />}>
                   <AdminServiceForm />
                 </Suspense>
@@ -162,11 +185,7 @@ function App() {
                 </Suspense>
               } />
 
-              <Route path="seo" element={
-                <Suspense fallback={<PageLoadingFallback />}>
-                  <AdminSEO />
-                </Suspense>
-              } />
+
               <Route path="audit-logs" element={
                 <Suspense fallback={<PageLoadingFallback />}>
                   <AdminAuditLogs />

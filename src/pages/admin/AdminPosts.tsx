@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import { blogPosts } from '../../data/blogPosts';
 import { formatTableDate } from '../../utils/dateFormatter';
+import { usePosts } from '../../hooks/usePosts';
+import { PostQuery } from '../../services/postsService';
+import { useToast, ToastContainer } from '../../components/Toast';
 
 interface PostFilters {
   search: string;
@@ -20,32 +22,35 @@ export const AdminPosts: React.FC = () => {
   });
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const { toasts, addToast, removeToast } = useToast();
+
+  // Build query from filters
+  const query = useMemo((): PostQuery => {
+    const q: PostQuery = {};
+    
+    if (filters.search) q.search = filters.search;
+    if (filters.category !== 'all') q.category = filters.category;
+    if (filters.status === 'published') q.published = true;
+    if (filters.status === 'draft') q.published = false;
+    if (filters.featured === 'featured') q.featured = true;
+    if (filters.featured === 'normal') q.featured = false;
+    
+    return q;
+  }, [filters]);
+
+  // Use the posts hook with the query
+  const { posts: allPosts, loading, error, stats, deletePost: apiDeletePost, updatePublishedStatus } = usePosts(query);
 
   // Get unique categories for filter dropdown
   const categories = useMemo(() => {
-    const allCategories = blogPosts.map(post => post.category);
+    const allCategories = allPosts.map(post => post.category);
     return ['all', ...Array.from(new Set(allCategories))];
-  }, []);
+  }, [allPosts]);
 
-  // Filter posts based on current filters
+  // Filtered posts (additional client-side filtering if needed)
   const filteredPosts = useMemo(() => {
-    return blogPosts.filter(post => {
-      const matchesSearch = post.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-                           post.excerpt.toLowerCase().includes(filters.search.toLowerCase()) ||
-                           post.tags.some(tag => tag.toLowerCase().includes(filters.search.toLowerCase()));
-      
-      const matchesCategory = filters.category === 'all' || post.category === filters.category;
-      
-      // For demo purposes, treating all posts as published
-      const matchesStatus = filters.status === 'all' || filters.status === 'published';
-      
-      const matchesFeatured = filters.featured === 'all' || 
-                             (filters.featured === 'featured' && post.featured) ||
-                             (filters.featured === 'normal' && !post.featured);
-
-      return matchesSearch && matchesCategory && matchesStatus && matchesFeatured;
-    });
-  }, [filters]);
+    return allPosts;
+  }, [allPosts]);
 
   const handleSelectPost = (postId: string) => {
     setSelectedPosts(prev => 
@@ -67,25 +72,62 @@ export const AdminPosts: React.FC = () => {
     return formatTableDate(dateString);
   };
 
-  const handleBulkAction = (action: string) => {
-    // Handle bulk actions (implement API calls)
+  const handleBulkAction = async (action: string) => {
+    // Handle bulk actions
+    if (action === 'delete') {
+      if (window.confirm(`Are you sure you want to delete ${selectedPosts.length} post(s)?`)) {
+        for (const postId of selectedPosts) {
+          await apiDeletePost(postId);
+        }
+      }
+    } else if (action === 'publish') {
+      for (const postId of selectedPosts) {
+        await updatePublishedStatus(postId, true);
+      }
+    } else if (action === 'unpublish') {
+      for (const postId of selectedPosts) {
+        await updatePublishedStatus(postId, false);
+      }
+    }
     setSelectedPosts([]);
   };
 
-  const handleDeletePost = (postId: string) => {
+  const handleDeletePost = async (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post?')) {
-      console.log('Delete post:', postId);
-      // In real app, this would make an API call
+      await apiDeletePost(postId);
     }
   };
 
-  const handleDuplicatePost = (postId: string) => {
-    console.log('Duplicate post:', postId);
-    // In real app, this would create a copy of the post
+  const handleDuplicatePost = (post: any) => {
+    const baseUrl = window.location.origin;
+    const postUrl = `${baseUrl}/blog/${post.slug}`;
+    
+    navigator.clipboard.writeText(postUrl).then(() => {
+      addToast('Post URL copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Failed to copy URL:', err);
+      addToast('Failed to copy URL to clipboard', 'error');
+    });
   };
+
+  // Show error if there's an API error
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <Icon icon="lucide:alert-circle" className="text-red-600 mr-2" width={20} height={20} />
+            <span className="text-red-800">Error loading posts: {error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -124,7 +166,9 @@ export const AdminPosts: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Total Posts</p>
-              <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">{blogPosts.length}</p>
+              <p className="text-2xl font-bold text-[rgb(var(--color-foreground))]">
+                {loading ? '...' : stats?.total_posts || 0}
+              </p>
             </div>
             <Icon icon="lucide:file-text" className="text-[rgb(var(--color-primary))]" width={24} height={24} />
           </div>
@@ -133,7 +177,9 @@ export const AdminPosts: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Published</p>
-              <p className="text-2xl font-bold text-green-600">{blogPosts.length}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {loading ? '...' : stats?.published_posts || 0}
+              </p>
             </div>
             <Icon icon="lucide:eye" className="text-green-600" width={24} height={24} />
           </div>
@@ -142,7 +188,9 @@ export const AdminPosts: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Drafts</p>
-              <p className="text-2xl font-bold text-orange-600">0</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {loading ? '...' : stats?.draft_posts || 0}
+              </p>
             </div>
             <Icon icon="lucide:edit" className="text-orange-600" width={24} height={24} />
           </div>
@@ -152,7 +200,7 @@ export const AdminPosts: React.FC = () => {
             <div>
               <p className="text-sm text-[rgb(var(--color-muted-foreground))]">Featured</p>
               <p className="text-2xl font-bold text-purple-600">
-                {blogPosts.filter(post => post.featured).length}
+                {loading ? '...' : stats?.featured_posts || 0}
               </p>
             </div>
             <Icon icon="lucide:star" className="text-purple-600" width={24} height={24} />
@@ -260,8 +308,8 @@ export const AdminPosts: React.FC = () => {
 
       {/* Posts Table */}
       <div className="bg-[rgb(var(--color-card))] rounded-lg border border-[rgb(var(--color-border))] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full admin-posts-table">
+        <div className="overflow-x-auto overflow-y-visible">
+          <table className="w-full admin-posts-table" style={{ minWidth: '800px' }}>
             <thead className="bg-[rgb(var(--color-muted))] border-b border-[rgb(var(--color-border))]">
               <tr>
                 <th className="w-12 px-4 py-3 text-left">
@@ -275,22 +323,31 @@ export const AdminPosts: React.FC = () => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
                   Title
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))] w-40">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))] w-32">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))] w-40">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))]">
+                <th className="px-4 py-3 text-left text-sm font-medium text-[rgb(var(--color-foreground))] w-64">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgb(var(--color-border))]">
-              {filteredPosts.map((post) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center">
+                    <div className="flex items-center justify-center">
+                      <Icon icon="lucide:loader-2" className="animate-spin text-[rgb(var(--color-primary))] mr-2" width={20} height={20} />
+                      <span className="text-[rgb(var(--color-muted-foreground))]">Loading posts...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredPosts.map((post) => (
                 <tr key={post.id} className="hover:bg-[rgb(var(--color-muted))] transition-colors">
                   <td className="px-4 py-4">
                     <input
@@ -333,8 +390,12 @@ export const AdminPosts: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                      Published
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      post.published 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                    }`}>
+                      {post.published ? 'Published' : 'Draft'}
                     </span>
                   </td>
                   <td className="px-4 py-4">
@@ -346,7 +407,7 @@ export const AdminPosts: React.FC = () => {
                   <td className="px-4 py-4">
                     <div className="flex items-center space-x-2 admin-posts-actions">
                       <Link
-                        to={`/blog/${post.id}`}
+                        to={post.published ? `/blog/${post.slug}` : `/blog/${post.slug}?preview=true`}
                         target="_blank"
                         className="inline-flex items-center px-2 py-1 text-xs text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-transparent hover:border-[rgb(var(--color-border))] rounded transition-colors"
                         title="View Post"
@@ -363,9 +424,9 @@ export const AdminPosts: React.FC = () => {
                         Edit
                       </Link>
                       <button
-                        onClick={() => handleDuplicatePost(post.id)}
+                        onClick={() => handleDuplicatePost(post)}
                         className="inline-flex items-center px-2 py-1 text-xs text-[rgb(var(--color-muted-foreground))] hover:text-[rgb(var(--color-primary))] border border-transparent hover:border-[rgb(var(--color-border))] rounded transition-colors"
-                        title="Duplicate Post"
+                        title="Copy Post URL"
                       >
                         <Icon icon="lucide:copy" width={14} height={14} className="mr-1" />
                         Copy

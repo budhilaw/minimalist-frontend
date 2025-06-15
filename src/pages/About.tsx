@@ -36,13 +36,6 @@ export const About: React.FC = () => {
     })
   );
 
-  // Update the position title to "Senior Software Engineer"
-  const workHistoryWithUpdatedTitle = aboutData.workHistory.map(job => 
-    job.id === 'paper-id' 
-      ? { ...job, position: 'Senior Software Engineer' }
-      : job
-  );
-
   return (
     <div className="min-h-screen w-full bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))]">
       <div className="pt-20 pb-16">
@@ -94,12 +87,12 @@ export const About: React.FC = () => {
                 {/* Timeline line */}
                 <div className="absolute left-4 top-0 bottom-0 w-px bg-[rgb(var(--color-border))]"></div>
                 
-                <div className="space-y-8">
-                  {workHistoryWithUpdatedTitle
+              <div className="space-y-8">
+                  {aboutData.workHistory
                     .sort((a, b) => a.order - b.order)
                     .map((job, index) => (
                     <div key={job.id} className="relative">
-                      <div className="flex items-start">
+                    <div className="flex items-start">
                         <div className="flex-shrink-0 relative z-10">
                           <div className="flex items-center justify-center w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full border-2 border-[rgb(var(--color-background))]">
                             <Icon 
@@ -115,10 +108,10 @@ export const About: React.FC = () => {
                           <div className="bg-[rgb(var(--color-muted))] p-6 rounded-lg border border-[rgb(var(--color-border))] shadow-sm">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">
-                                  {job.position}
-                                </h4>
-                                <p className="text-[rgb(var(--color-primary))] font-medium">{job.company}</p>
+                          <h4 className="text-lg font-semibold text-[rgb(var(--color-foreground))]">
+                            {job.position}
+                          </h4>
+                          <p className="text-[rgb(var(--color-primary))] font-medium">{job.company}</p>
                               </div>
                               {job.current && (
                                 <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
@@ -130,37 +123,37 @@ export const About: React.FC = () => {
                               <Icon icon="lucide:calendar" className="w-4 h-4 mr-1" />
                               {job.period}
                             </p>
-                            
+                          
                             <div className="mb-4">
                               <h5 className="text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">Key Achievements:</h5>
                               <ul className="space-y-2">
-                                {job.achievements.map((achievement, idx) => (
-                                  <li key={idx} className="text-sm text-[rgb(var(--color-muted-foreground))] flex items-start">
+                            {job.achievements.map((achievement, idx) => (
+                              <li key={idx} className="text-sm text-[rgb(var(--color-muted-foreground))] flex items-start">
                                     <span className="w-1.5 h-1.5 bg-[rgb(var(--color-accent))] rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                                    {achievement}
-                                  </li>
-                                ))}
-                              </ul>
+                                {achievement}
+                              </li>
+                            ))}
+                          </ul>
                             </div>
-                            
+                          
                             <div>
                               <h5 className="text-sm font-medium text-[rgb(var(--color-foreground))] mb-2">Technologies:</h5>
-                              <div className="flex flex-wrap gap-2">
-                                {job.technologies.map((tech, idx) => (
-                                  <span
-                                    key={idx}
+                          <div className="flex flex-wrap gap-2">
+                            {job.technologies.map((tech, idx) => (
+                              <span
+                                key={idx}
                                     className="px-2 py-1 text-xs bg-[rgb(var(--color-background))] text-[rgb(var(--color-foreground))] rounded border border-[rgb(var(--color-border))] hover:bg-[rgb(var(--color-primary))] hover:text-white transition-colors"
-                                  >
-                                    {tech}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
+                              >
+                                {tech}
+                              </span>
+                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                      </div>
+                  </div>
+                ))}
                 </div>
               </div>
             </div>
@@ -231,7 +224,7 @@ export const About: React.FC = () => {
                         </ul>
                       </div>
                     )}
-                  </div>
+                </div>
                 ))}
               </div>
             </div>
@@ -270,8 +263,8 @@ export const About: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+                </div>
+                </div>
 
           {/* Contact CTA */}
           <div className="mt-16 text-center">
