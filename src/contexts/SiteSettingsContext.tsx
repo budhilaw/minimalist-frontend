@@ -164,12 +164,6 @@ export const SiteSettingsProvider: React.FC<SiteSettingsProviderProps> = ({ chil
         document.title = pageTitle;
       }
       
-      console.log('🔍 SiteSettings loaded with page titles:', {
-        backend: data.site,
-        localStorage: pageTitleFields,
-        final: enhancedData.site
-      });
-      
     } catch (err) {
       console.error('Failed to fetch site settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');
